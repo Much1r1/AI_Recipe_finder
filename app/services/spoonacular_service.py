@@ -1,5 +1,7 @@
 import os
 import requests
+import sqlite3
+import random
 from typing import List, Dict, Optional
 
 SPOONACULAR_API_KEY = os.getenv("SPOONACULAR_API_KEY")
@@ -10,12 +12,16 @@ BASE_SEARCH_URL = "https://api.spoonacular.com/recipes/complexSearch"
 def search_recipes(
     query: str,
     diet: Optional[str] = None,
+    cuisine: Optional[str] = None,
+    intolerances: Optional[List[str]] = None,
+    max_calories: Optional[int] = None,
+    max_price: Optional[float] = None,
     max_time: Optional[int] = None,
     number: int = 10,
 ) -> List[Dict]:
     """
     Spoonacular PRIMARY search.
-    Uses natural-language query.
+    Uses natural-language query and structured filters.
     """
 
     if not SPOONACULAR_API_KEY:
@@ -23,7 +29,7 @@ def search_recipes(
 
     params = {
         "apiKey": SPOONACULAR_API_KEY,
-        "query": query,                      # ✅ CORE FIX
+        "query": query,
         "addRecipeInformation": True,        # ingredients, instructions, time
         "fillIngredients": True,
         "number": number,
@@ -32,6 +38,18 @@ def search_recipes(
 
     if diet:
         params["diet"] = diet
+
+    if cuisine:
+        params["cuisine"] = cuisine
+
+    if intolerances:
+        params["intolerances"] = ",".join(intolerances)
+
+    if max_calories:
+        params["maxCalories"] = max_calories
+
+    if max_price:
+        params["maxPrice"] = max_price
 
     if max_time:
         params["maxReadyTime"] = max_time
@@ -63,3 +81,37 @@ def dedupe_spoonacular_results(results: list[dict]) -> list[dict]:
 
     return unique
 
+def get_random_ingredient() -> str:
+    """
+    Fetch a random ingredient from Spoonacular or fallback to local DB.
+    """
+    if SPOONACULAR_API_KEY:
+        try:
+            url = "https://api.spoonacular.com/recipes/random"
+            params = {"apiKey": SPOONACULAR_API_KEY, "number": 1}
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            recipes = data.get("recipes", [])
+            if recipes:
+                # Pick a random ingredient from the random recipe
+                recipe = recipes[0]
+                ingredients = recipe.get("extendedIngredients", [])
+                if ingredients:
+                    return random.choice(ingredients).get("name", "Garlic")
+        except Exception as e:
+            print(f"Spoonacular random failed: {e}")
+
+    # Fallback to local database
+    try:
+        conn = sqlite3.connect("./recipes.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM ingredients ORDER BY RANDOM() LIMIT 1;")
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            return row[0]
+    except Exception as e:
+        print(f"Local DB fallback failed: {e}")
+
+    return "Garlic"  # Ultimate fallback
