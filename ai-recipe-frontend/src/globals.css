@@ -1,0 +1,123 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@100..1000&family=Fraunces:wght@100..900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================
+   THEME TOKENS
+   ========================= */
+@layer base {
+  :root {
+    /* Core */
+    --background: 40 30% 96%;
+    --foreground: 25 15% 12%;
+    --card: 0 0% 100%;
+    --border: 40 20% 88%;
+    --ring: 145 25% 42%;
+    --radius: 1rem;
+
+    /* Brand */
+    --primary: 145 25% 42%;
+    --primary-foreground: 40 33% 98%;
+    --secondary: 40 25% 94%;
+    --secondary-foreground: 30 10% 25%;
+    --accent: 30 40% 95%;
+    --accent-foreground: 30 10% 20%;
+    --destructive: 0 65% 55%;
+
+    /* Muted */
+    --muted: 40 20% 92%;
+    --muted-foreground: 30 8% 45%;
+
+    /* App-specific */
+    --chip-active: 145 25% 42%;
+    --chip-inactive: 40 15% 90%;
+    --soft-sage: 145 20% 85%;
+    --warm-text: 30 10% 35%;
+
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -4px hsl(30 10% 20% / 0.08);
+    --shadow-card: 0 2px 12px -2px hsl(30 10% 20% / 0.06);
+    --shadow-hover: 0 8px 30px -6px hsl(30 10% 20% / 0.12);
+  }
+
+  .dark {
+    --background: 30 10% 8%;
+    --foreground: 40 20% 92%;
+    --card: 30 10% 10%;
+    --border: 30 10% 20%;
+    --primary: 145 30% 55%;
+    --secondary: 30 10% 15%;
+    --muted: 30 10% 18%;
+    --chip-inactive: 30 10% 20%;
+    --soft-sage: 145 15% 25%;
+    --warm-text: 40 15% 70%;
+
+    --shadow-soft: 0 4px 20px -4px hsl(0 0% 0% / 0.3);
+    --shadow-card: 0 2px 12px -2px hsl(0 0% 0% / 0.2);
+    --shadow-hover: 0 8px 30px -6px hsl(0 0% 0% / 0.4);
+  }
+}
+
+/* =========================
+   BASE STYLES
+   ========================= */
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: "DM Sans", sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Fraunces", serif;
+  }
+}
+
+/* =========================
+   COMPONENTS
+   ========================= */
+@layer components {
+  /* Toggle chips */
+  .chip {
+    @apply px-4 py-2 rounded-full text-sm font-medium transition cursor-pointer select-none;
+  }
+
+  .chip-inactive {
+    @apply bg-[hsl(var(--chip-inactive))] text-[hsl(var(--warm-text))];
+  }
+
+  .chip-active {
+    @apply bg-primary text-primary-foreground shadow-sm;
+  }
+
+  /* Ingredient tag */
+  .ingredient-chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium;
+    background: hsl(var(--soft-sage));
+  }
+
+  /* Recipe card */
+  .recipe-card {
+    @apply bg-card rounded-2xl transition;
+    box-shadow: var(--shadow-card);
+  }
+
+  .recipe-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+  }
+
+  /* Search input */
+  .search-wrapper {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .search-wrapper:focus-within {
+    box-shadow: var(--shadow-hover);
+  }
+}
