@@ -16,14 +16,13 @@ app = FastAPI(
 # Create tables AFTER models are loaded
 Base.metadata.create_all(bind=engine)
 
-app.include_router(recipes.router, prefix="/api")
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"], #Next.js dev
+    allow_origins=["http://localhost:3000", "http://localhost:8080"], # React and Vite dev
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+app.include_router(recipes.router, prefix="/api")
 app.include_router(api_router, prefix="/api")

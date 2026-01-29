@@ -28,17 +28,14 @@ const Index = () => {
     setError(undefined);
 
     try {
-      const persona = getPersona() ?? "busy_professional";
-      
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
       const res = await fetch(
-        "http://localhost:8000/api/recipes/recipes/search",
+        `${apiUrl}/api/recipes/search`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             query,
-            persona,
-            filters,
           }),
         }
       );
@@ -48,7 +45,18 @@ const Index = () => {
       }
 
       const data = await res.json();
-      setRecipes(data.recipes || []);
+      const rawRecipes: Recipe[] = data.recipes || [];
+
+      // Light Defensive Deduplication (Backend is source of truth)
+      const seenIds = new Set();
+      const uniqueRecipes = rawRecipes.filter(recipe => {
+        if (!recipe.id) return true;
+        if (seenIds.has(recipe.id)) return false;
+        seenIds.add(recipe.id);
+        return true;
+      });
+
+      setRecipes(uniqueRecipes);
     } catch (error) {
       console.error("Search failed:", error);
       setError("Failed to fetch recipes. Is the backend running?");

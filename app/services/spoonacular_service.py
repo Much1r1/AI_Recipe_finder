@@ -25,12 +25,14 @@ def search_recipes(
     """
 
     if not SPOONACULAR_API_KEY:
-        raise RuntimeError("Spoonacular API key not set")
+        print("⚠️ Spoonacular API key missing")
+        return []
 
     params = {
         "apiKey": SPOONACULAR_API_KEY,
         "query": query,
         "addRecipeInformation": True,        # ingredients, instructions, time
+        "addRecipeNutrition": True,
         "fillIngredients": True,
         "number": number,
         "sort": "popularity",                # good default for busy pros
@@ -54,16 +56,18 @@ def search_recipes(
     if max_time:
         params["maxReadyTime"] = max_time
 
-    response = requests.get(
-        BASE_SEARCH_URL,
-        params=params,
-        timeout=10,
-    )
-
-    response.raise_for_status()
-    data = response.json()
-
-    return data.get("results", [])
+    try:
+        response = requests.get(
+            BASE_SEARCH_URL,
+            params=params,
+            timeout=10,
+        )
+        response.raise_for_status()
+        data = response.json()
+        return data.get("results", [])
+    except Exception as e:
+        print(f"⚠️ Spoonacular search failed: {e}")
+        return []
 
 def dedupe_spoonacular_results(results: list[dict]) -> list[dict]:
     seen = set()

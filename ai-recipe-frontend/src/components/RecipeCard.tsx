@@ -39,23 +39,30 @@ export default function RecipeCard({ recipe, index = 0 }: Props) {
         <div className="flex items-center gap-3 flex-wrap">
           <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
             <Clock className="w-4 h-4" />
-            {recipe.ready_in_minutes} min
+            {recipe.ready_in_minutes || "—"} min
           </span>
-          
-          {recipe.protein_score && recipe.protein_score >= 7 && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs font-medium">
-              <Zap className="w-3 h-3" />
-              High protein
-            </span>
-          )}
 
-          {recipe.estimated_cost_kes && (
-            <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-              <DollarSign className="w-4 h-4" />
-              KES {recipe.estimated_cost_kes}
-            </span>
-          )}
+          <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Zap className="w-4 h-4" />
+            {recipe.calories ? `${Math.round(recipe.calories)} kcal` : "—"}
+          </span>
+
+          <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+            <DollarSign className="w-4 h-4" />
+            {recipe.price_per_serving ? `$${(recipe.price_per_serving / 100).toFixed(2)}` : "—"}
+          </span>
         </div>
+
+        {/* Dietary Tags */}
+        {recipe.dietary_tags && recipe.dietary_tags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {recipe.dietary_tags.map(tag => (
+              <span key={tag} className="px-2 py-0.5 bg-secondary text-secondary-foreground rounded-full text-[10px] font-medium">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
         
         {/* Ingredients Preview */}
         {recipe.ingredients && recipe.ingredients.length > 0 && (

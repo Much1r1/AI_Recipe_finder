@@ -11,3 +11,17 @@ def calculate_protein_score(recipe_data: dict) -> float | None:
             return float(nutrient.get("amount", 0))
 
     return None
+
+
+def extract_calories(recipe_data: dict) -> float | None:
+    """
+    Extracts calories from Spoonacular nutrition data
+    """
+    nutrition = recipe_data.get("nutrition", {})
+    nutrients = nutrition.get("nutrients", [])
+
+    for nutrient in nutrients:
+        if nutrient.get("name", "").lower() == "calories":
+            return float(nutrient.get("amount", 0))
+
+    return None
