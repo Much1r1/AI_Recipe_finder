@@ -12,7 +12,10 @@ class Recipe(BaseModel):
     image: Optional[str] = None
 
     estimated_cost_kes: Optional[int] = None
-    protein: Optional[float] = None
+    price_per_serving: Optional[float] = None
+    calories: Optional[float] = None
+    dietary_tags: List[str] = []
+    protein_score: Optional[float] = None
     protein_per_cost: Optional[float] = None
 
     match_score: float | None = None

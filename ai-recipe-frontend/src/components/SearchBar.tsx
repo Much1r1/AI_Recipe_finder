@@ -52,6 +52,7 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
         <motion.button
           onClick={handleSearch}
           disabled={isLoading || !query.trim()}
+          data-testid="recipe-search-btn"
           className="px-5 py-2 bg-primary text-primary-foreground rounded-xl font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           whileTap={{ scale: 0.97 }}
         >

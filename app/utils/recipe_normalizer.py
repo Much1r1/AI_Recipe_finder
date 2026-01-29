@@ -1,6 +1,6 @@
 from typing import Dict, Any, List
 from app.utils.cost_calculator import estimate_recipe_cost
-from app.utils.nutrition_utils import calculate_protein_score
+from app.utils.nutrition_utils import calculate_protein_score, extract_calories
 
 
 def normalize_spoonacular_recipe(data: Dict[str, Any]) -> Dict[str, Any]:
@@ -48,6 +48,14 @@ def normalize_spoonacular_recipe(data: Dict[str, Any]) -> Dict[str, Any]:
     # ---------- COST & NUTRITION ----------
     estimated_cost = estimate_recipe_cost(ingredients)
     protein_score = calculate_protein_score(data)
+    calories = extract_calories(data)
+
+    # ---------- DIETARY TAGS ----------
+    dietary_tags = []
+    if data.get("vegetarian"): dietary_tags.append("Vegetarian")
+    if data.get("vegan"): dietary_tags.append("Vegan")
+    if data.get("glutenFree"): dietary_tags.append("Gluten Free")
+    if data.get("dairyFree"): dietary_tags.append("Dairy Free")
 
     protein_per_cost = None
     if protein_score is not None and estimated_cost > 0:
@@ -65,6 +73,9 @@ def normalize_spoonacular_recipe(data: Dict[str, Any]) -> Dict[str, Any]:
 
         # ranking + personalization signals
         "estimated_cost_kes": estimated_cost,
+        "price_per_serving": data.get("pricePerServing"),
+        "calories": calories,
+        "dietary_tags": dietary_tags,
         "protein_score": protein_score,
         "protein_per_cost": protein_per_cost,
         "popularity": data.get("aggregateLikes", 0),

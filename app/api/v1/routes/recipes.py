@@ -52,11 +52,24 @@ async def search_recipes_endpoint(payload: RecipeRequest):
             "message": "No recipes found",
         }
 
-    # 3️⃣ Normalize
-    normalized = [
-        normalize_spoonacular_recipe(r)
-        for r in raw_recipes
-    ]
+    # 3️⃣ Normalize and Deduplicate
+    normalized = []
+    seen_ids = set()
+    seen_backups = set()
+
+    for r in raw_recipes:
+        norm = normalize_spoonacular_recipe(r)
+        rid = norm.get("id")
+        backup_key = f"{norm.get('title')}-{norm.get('source_url')}"
+
+        if rid and rid in seen_ids:
+            continue
+        if backup_key in seen_backups:
+            continue
+
+        if rid: seen_ids.add(rid)
+        seen_backups.add(backup_key)
+        normalized.append(norm)
 
     # 4️⃣ Rank (busy professional logic)
     ranked = rank_recipes(
