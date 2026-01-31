@@ -17,6 +17,7 @@ def search_recipes(
     max_calories: Optional[int] = None,
     max_price: Optional[float] = None,
     max_time: Optional[int] = None,
+    recipe_type: Optional[str] = None,
     number: int = 10,
 ) -> List[Dict]:
     """
@@ -44,17 +45,22 @@ def search_recipes(
     if cuisine:
         params["cuisine"] = cuisine
 
-    if intolerances:
+    if intolerances and len(intolerances) > 0:
         params["intolerances"] = ",".join(intolerances)
 
-    if max_calories:
+    if max_calories is not None:
         params["maxCalories"] = max_calories
 
-    if max_price:
+    if max_price is not None:
         params["maxPrice"] = max_price
 
-    if max_time:
+    if max_time is not None:
         params["maxReadyTime"] = max_time
+
+    if recipe_type:
+        params["type"] = recipe_type
+
+    print(f"--- [SEARCH TRACE] Spoonacular Params: {params} ---")
 
     try:
         response = requests.get(
@@ -64,7 +70,9 @@ def search_recipes(
         )
         response.raise_for_status()
         data = response.json()
-        return data.get("results", [])
+        results = data.get("results", [])
+        print(f"--- [SEARCH TRACE] Total Results from Spoonacular: {len(results)} ---")
+        return results
     except Exception as e:
         print(f"⚠️ Spoonacular search failed: {e}")
         return []
