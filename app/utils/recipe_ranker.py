@@ -26,7 +26,11 @@ def rank_recipes(
         }
 
         matched = ingredients & query_set
-        if not matched:
+
+        # If it's a multi-word query, the exact intersection will likely be empty.
+        # We relax the hard filter for longer queries.
+        query_is_complex = any(len(q.split()) > 2 for q in query_ingredients)
+        if not matched and not query_is_complex:
             continue
 
         score = 0.0
@@ -47,7 +51,7 @@ def rank_recipes(
             reasons.append(f"Only {ingredient_count} ingredients")
 
         # 💪 PROTEIN
-        protein = recipe.get("protein")
+        protein = recipe.get("protein_score")
         if protein:
             score += min(protein * 0.15, 6)
             reasons.append("High protein")
