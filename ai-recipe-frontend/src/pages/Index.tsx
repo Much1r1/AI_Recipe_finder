@@ -21,6 +21,8 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | undefined>();
+  const [parsedIntent, setParsedIntent] = useState<any>(null);
+  const [message, setMessage] = useState<string | undefined>();
 
   const handleSearch = async (query: string) => {
     setIsLoading(true);
@@ -46,6 +48,8 @@ const Index = () => {
 
       const data = await res.json();
       const rawRecipes: Recipe[] = data.recipes || [];
+      setParsedIntent(data.parsed_intent);
+      setMessage(data.message);
 
       // Light Defensive Deduplication (Backend is source of truth)
       const seenIds = new Set();
@@ -111,6 +115,8 @@ const Index = () => {
             loading={isLoading}
             hasSearched={hasSearched}
             error={error}
+            parsedIntent={parsedIntent}
+            message={message}
           />
         </div>
       </section>

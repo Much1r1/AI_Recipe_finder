@@ -27,3 +27,5 @@ class Recipe(BaseModel):
 class RecipeListResponse(BaseModel):
     recipes: List[Recipe]
     message: str
+    parsed_intent: Optional[dict] = None
+    relaxation_applied: List[str] = []

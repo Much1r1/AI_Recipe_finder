@@ -111,7 +111,9 @@ async def parse_user_intent(user_input: str) -> IntentSchema:
         "diet": "string or null",
         "intolerances": ["string"],
         "max_calories": int or null,
-        "max_price": float or null
+        "max_price": float or null,
+        "max_time_minutes": int or null,
+        "recipe_type": "string or null"
     }
     """
 
@@ -141,11 +143,22 @@ async def parse_user_intent(user_input: str) -> IntentSchema:
         if "dairy free" in query or "no milk" in query: intolerances.append("Dairy")
         if "gluten free" in query: intolerances.append("Gluten")
 
-        max_calories = 800
+        max_calories = None
         if "low cal" in query: max_calories = 400
 
         max_price = None
         if "cheap" in query: max_price = 10.0
+
+        max_time_minutes = None
+        # Basic time extraction from common patterns like "under 20 mins"
+        time_match = re.search(r"under (\d+)", query)
+        if time_match:
+            max_time_minutes = int(time_match.group(1))
+
+        recipe_type = None
+        if "breakfast" in query: recipe_type = "breakfast"
+        elif "lunch" in query: recipe_type = "lunch"
+        elif "dinner" in query: recipe_type = "main course"
 
         return IntentSchema(
             query=user_input,
@@ -153,5 +166,7 @@ async def parse_user_intent(user_input: str) -> IntentSchema:
             diet=diet,
             intolerances=intolerances,
             max_calories=max_calories,
-            max_price=max_price
+            max_price=max_price,
+            max_time_minutes=max_time_minutes,
+            recipe_type=recipe_type
         )

@@ -11,9 +11,18 @@ type Props = {
   loading: boolean;
   error?: string;
   hasSearched?: boolean;
+  parsedIntent?: any;
+  message?: string;
 };
 
-export default function SearchResults({ recipes, loading, error, hasSearched = false }: Props) {
+export default function SearchResults({
+  recipes,
+  loading,
+  error,
+  hasSearched = false,
+  parsedIntent,
+  message
+}: Props) {
   // Loading state
   if (loading) {
     return (
@@ -47,11 +56,21 @@ export default function SearchResults({ recipes, loading, error, hasSearched = f
           <ChefHat className="w-8 h-8 text-muted-foreground" />
         </div>
         <h3 className="font-serif text-xl font-semibold text-foreground mb-2">
-          No recipes matched your search
+          {message || "No recipes matched your search"}
         </h3>
         <p className="text-muted-foreground max-w-sm">
           Try different ingredients or adjust your filters.
         </p>
+
+        {parsedIntent && (
+          <div className="mt-6 p-4 bg-muted/50 rounded-lg text-left max-w-md w-full">
+            <p className="text-xs font-mono text-muted-foreground mb-2 uppercase tracking-wider">[DEV MODE] Parsed Intent</p>
+            <pre className="text-xs font-mono overflow-auto">
+              {JSON.stringify(parsedIntent, null, 2)}
+            </pre>
+          </div>
+        )}
+
         <div className="mt-4 flex items-center gap-2 text-sm text-primary">
           <Clock className="w-4 h-4" />
           <span>Tip: Try fewer ingredients or broader terms</span>
@@ -70,11 +89,29 @@ export default function SearchResults({ recipes, loading, error, hasSearched = f
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6"
+      className="space-y-6"
     >
-      {recipes.map((recipe, index) => (
-        <RecipeCard key={recipe.id} recipe={recipe} index={index} />
-      ))}
+      {message && message.includes("broader") && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm flex items-center gap-2">
+          <Clock className="w-4 h-4" />
+          {message}
+        </div>
+      )}
+
+      {parsedIntent && (
+          <div className="p-4 bg-muted/30 rounded-lg text-left">
+            <p className="text-xs font-mono text-muted-foreground mb-2 uppercase tracking-wider">[DEV MODE] Parsed Intent</p>
+            <pre className="text-xs font-mono overflow-auto">
+              {JSON.stringify(parsedIntent, null, 2)}
+            </pre>
+          </div>
+        )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {recipes.map((recipe, index) => (
+          <RecipeCard key={recipe.id} recipe={recipe} index={index} />
+        ))}
+      </div>
     </motion.div>
   );
 }

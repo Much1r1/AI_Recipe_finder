@@ -12,7 +12,10 @@ def rank_recipes(
     """
 
     query_set: Set[str] = set(q.lower() for q in query_ingredients)
-    max_time = constraints.get("max_time", 30) if constraints else 30
+    # Use a high default if no time constraint is provided to avoid over-filtering
+    max_time = constraints.get("max_time") if constraints else None
+    if max_time is None:
+        max_time = 999
 
     scored = []
 
