@@ -47,19 +47,38 @@ const Index = () => {
       }
 
       const data = await res.json();
-      const rawRecipes: Recipe[] = data.recipes || [];
+      console.log("Full API Response:", data);
+
+      // Robustly extract recipes from either .recipes or .results
+      const rawRecipes: Recipe[] = (data.recipes && data.recipes.length > 0)
+        ? data.recipes
+        : (data.results || data.recipes || []);
+
+      console.log("Raw recipes array:", rawRecipes);
+
       setParsedIntent(data.parsed_intent);
       setMessage(data.message);
 
       // Light Defensive Deduplication (Backend is source of truth)
+      console.log("Before dedup:", rawRecipes.length);
       const seenIds = new Set();
+      const seenBackups = new Set();
       const uniqueRecipes = rawRecipes.filter(recipe => {
-        if (!recipe.id) return true;
-        if (seenIds.has(recipe.id)) return false;
-        seenIds.add(recipe.id);
+        // Use id as primary key
+        if (recipe.id) {
+          if (seenIds.has(recipe.id)) return false;
+          seenIds.add(recipe.id);
+          return true;
+        }
+        // Fallback to title + source_url if id is missing
+        const backupKey = `${recipe.title}-${recipe.source_url}`;
+        if (seenBackups.has(backupKey)) return false;
+        seenBackups.add(backupKey);
         return true;
       });
 
+      console.log("After dedup:", uniqueRecipes.length);
+      console.log("Array passed to setRecipes:", uniqueRecipes);
       setRecipes(uniqueRecipes);
     } catch (error) {
       console.error("Search failed:", error);
