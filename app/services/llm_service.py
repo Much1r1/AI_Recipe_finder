@@ -149,6 +149,7 @@ async def parse_user_intent(user_input: str) -> IntentSchema:
 
         return IntentSchema(
             query=user_input,
+            cuisine=None,
             diet=diet,
             intolerances=intolerances,
             max_calories=max_calories,
