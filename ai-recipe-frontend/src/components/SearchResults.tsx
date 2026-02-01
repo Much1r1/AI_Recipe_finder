@@ -44,8 +44,8 @@ export default function SearchResults({
     return <ErrorState message={error} />;
   }
 
-  // Empty state (only show if user has searched)
-  if (hasSearched && recipes.length === 0) {
+  // Empty state (only show if user has searched and loading is complete)
+  if (hasSearched && !loading && recipes.length === 0) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -109,7 +109,7 @@ export default function SearchResults({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {recipes.map((recipe, index) => (
-          <RecipeCard key={recipe.id} recipe={recipe} index={index} />
+          <RecipeCard key={recipe.id || `${recipe.title}-${index}`} recipe={recipe} index={index} />
         ))}
       </div>
     </motion.div>

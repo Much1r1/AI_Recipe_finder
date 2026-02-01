@@ -30,7 +30,7 @@ export default function RecipeCard({ recipe, index = 0 }: Props) {
       <div className="p-5 space-y-4">
         <div className="flex justify-between items-start gap-2">
           <h3 className="font-serif text-xl font-semibold text-foreground leading-tight">
-            {recipe.title}
+            {recipe.title || "Untitled Recipe"}
           </h3>
           <PersonalizationBadge />
         </div>
@@ -65,10 +65,12 @@ export default function RecipeCard({ recipe, index = 0 }: Props) {
         )}
         
         {/* Ingredients Preview */}
-        {recipe.ingredients && recipe.ingredients.length > 0 && (
+        {recipe.ingredients && recipe.ingredients.length > 0 ? (
           <p className="text-sm text-muted-foreground">
             {recipe.ingredients.slice(0, 5).join(" · ")}
           </p>
+        ) : (
+          <p className="text-sm text-muted-foreground italic">No ingredients listed</p>
         )}
         
         {/* Why This Recipe */}
