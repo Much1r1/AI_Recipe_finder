@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
-import { Clock, Zap, DollarSign } from "lucide-react";
+import { Clock, Zap, Wallet } from "lucide-react";
 import PersonalizationBadge from "./PersonalizationBadge";
 import WhyThisRecipe from "./WhyThisRecipe";
 import { Recipe } from "../types/recipe";
+import { formatCurrency } from "@/lib/utils";
 
 type Props = {
   recipe: Recipe;
@@ -12,22 +13,23 @@ type Props = {
 export default function RecipeCard({ recipe, index = 0 }: Props) {
   return (
     <motion.article
-      className="recipe-card border rounded-lg shadow-sm overflow-hidden"
+      className="recipe-card border rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.1 }}
     >
       {recipe.image && (
-        <div className="aspect-4/3 overflow-hidden">
+        <div className="aspect-video overflow-hidden">
           <img
             src={recipe.image}
             alt={recipe.title}
+            loading="lazy"
             className="w-full h-full object-cover"
           />
         </div>
       )}
       
-      <div className="p-5 space-y-4">
+      <div className="p-4 sm:p-5 space-y-4">
         <div className="flex justify-between items-start gap-2">
           <h3 className="font-serif text-xl font-semibold text-foreground leading-tight">
             {recipe.title || "Untitled Recipe"}
@@ -48,8 +50,8 @@ export default function RecipeCard({ recipe, index = 0 }: Props) {
           </span>
 
           <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-            <DollarSign className="w-4 h-4" />
-            {recipe.price_per_serving ? `$${(recipe.price_per_serving / 100).toFixed(2)}` : "—"}
+            <Wallet className="w-4 h-4" />
+            {recipe.price_per_serving ? formatCurrency(recipe.price_per_serving) : "—"}
           </span>
         </div>
 
