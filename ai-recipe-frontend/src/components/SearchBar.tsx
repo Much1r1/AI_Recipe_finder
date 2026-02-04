@@ -14,7 +14,7 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleSearch() {
-    if (!query.trim()) return;
+    if (!query.trim() || isLoading) return;
     
     setIsLoading(true);
     try {
