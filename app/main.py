@@ -18,7 +18,7 @@ Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:8080"], # React and Vite dev
+    allow_origins=["https://ai-recipe-finder-seven.vercel.app/"], # Vercel domain
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
