@@ -13,12 +13,16 @@ app = FastAPI(
     version="0.1.0"
 )
 
+origins = [
+    "https://ai-recipe-finder-seven.vercel.app"
+]
+
 # Create tables AFTER models are loaded
 Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://ai-recipe-finder-seven.vercel.app/"], # Vercel domain
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
