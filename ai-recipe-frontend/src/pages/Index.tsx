@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { Utensils } from "lucide-react";
-import SearchBar from "@/components/SearchBar";
-import SearchResults from "@/components/SearchResults";
-import PersonaBanner from "@/components/PersonaBanner";
-import { Recipe } from "@/types/recipe";
+import SearchBar from "@/features/recipes/components/SearchBar";
+import SearchResults from "@/features/recipes/components/SearchResults";
+import PersonaBanner from "@/features/recipes/components/PersonaBanner";
+import { Recipe } from "@/features/recipes/types/recipe";
 import { getPersona } from "@/lib/persona";
-import { Filters, FilterSection } from "@/components/FilterSection";
+import { Filters, FilterSection } from "@/features/recipes/components/FilterSection";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {

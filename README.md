@@ -1,93 +1,51 @@
-# AI Recipe Generator
+# QuickBite: AI Nutrition & Meal Planning Platform
 
-An AI-powered recipe search engine that understands messy user intent and returns personalized recipe recommendations.
+QuickBite is a comprehensive, AI-powered platform designed to help busy professionals manage their nutrition, track their goals, and plan their meals effortlessly.
 
-## Features
-- **Intent Parsing**: Uses Phi-3 to extract ingredients, diet, and constraints from natural language.
-- **Spoonacular Integration**: Fetches real recipes based on parsed intent.
-- **Deduplication**: Ensures no duplicate recipes are shown (implemented in both backend and frontend).
-- **UI Contract**: Displays title, image, calories, price per serving, and dietary tags.
-- **Dockerized**: Easy deployment with Docker Compose.
+## 🚀 Key Features
+- **AI Calorie Tracker**: Take a photo of your food, and our AI vision estimates calories and macros.
+- **AI Recipe Search**: Natural language search (e.g., "high protein dinner under 30 mins") powered by Phi-3 and Spoonacular.
+- **Meal Planner**: Plan your entire week's meals in minutes.
+- **Automated Shopping List**: Generate grocery lists directly from your meal plans.
+- **Health Trackers**: Integrated Water Intake and Fasting (16:8, OMAD) trackers.
+- **Barcode Scanner**: Scan packaged foods for instant nutritional data.
+- **Community**: Share your favorite recipes and meal plans with others.
 
-## Setup
+## 🏗 Architecture
+The app follows a modern, scalable architecture:
+- **Backend**: FastAPI with a modular domain-driven structure.
+- **Frontend**: React + Vite using a feature-based organization.
+- **Database**: PostgreSQL for robust data management.
+- **Cache/Queue**: Redis for performance and background tasks.
 
-### Environment Variables
+See [ARCHITECTURE.md](ARCHITECTURE.md) for a deep dive into the system design.
 
-Create a `.env` file in the root for the backend:
-```env
-SPOONACULAR_API_KEY=your_key_here
-OLLAMA_URL=http://localhost:11434/api/generate
-```
+## 🛠 Setup & Installation
 
-Create a `.env.local` file in `ai-recipe-frontend/`:
-```env
-VITE_API_URL=http://localhost:8000
-```
+### Prerequisites
+- Docker & Docker Compose
+- Spoonacular API Key
+
+### Quick Start (Docker)
+1. Clone the repository.
+2. Create a `.env` file based on `.env.example`.
+3. Run the entire stack:
+   ```bash
+   docker-compose up --build
+   ```
+   - Frontend: `http://localhost:3000`
+   - Backend API: `http://localhost:8000`
+   - API Docs: `http://localhost:8000/docs`
 
 ### Local Development
+Refer to the `ARCHITECTURE.md` for folder structures and the `README` in `ai-recipe-frontend` for frontend-specific instructions.
 
-1. **Backend**:
-   ```bash
-   pip install -r requirements.txt
-   export PYTHONPATH=$PYTHONPATH:.
-   uvicorn app.main:app --reload
-   ```
-
-2. **Frontend**:
-   ```bash
-   cd ai-recipe-frontend
-   npm install
-   npm run dev
-   ```
-
-### Docker Deployment
-
-Run both services with:
-```bash
-docker-compose up --build
-```
-- Backend: `http://localhost:8000`
-- Frontend: `http://localhost:3000`
-
-## API Contract
-
-### Search Recipes
-- **Endpoint**: `POST /api/recipes/search`
-- **Payload**: `{ "query": "string" }`
-- **Response**:
-  ```json
-  {
-    "recipes": [
-      {
-        "id": 123,
-        "title": "Recipe Title",
-        "image": "url",
-        "calories": 450,
-        "price_per_serving": 250,
-        "dietary_tags": ["Vegetarian", "Gluten Free"],
-        ...
-      }
-    ],
-    "message": "Recipes fetched successfully"
-  }
-  ```
-
-## Smoke Test Example (curl)
-
-```bash
-curl -X POST http://localhost:8000/api/recipes/search \
-     -H "Content-Type: application/json" \
-     -d '{"query": "low carb chicken dinner"}'
-```
-
-## Testing
+## 🧪 Testing
 Run backend tests:
 ```bash
 export PYTHONPATH=$PYTHONPATH:.
-python -m pytest tests/test_smoke.py
+python -m pytest
 ```
 
-## Known Limitations
-- Requires a valid Spoonacular API key for full results.
-- Intent parsing depends on Ollama (Phi-3) availability; fallbacks are in place.
-- Calories and Price may not be available for all recipes from the API.
+## 📄 License
+MIT
