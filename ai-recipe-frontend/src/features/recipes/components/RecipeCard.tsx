@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Clock, Zap, Wallet } from "lucide-react";
 import PersonalizationBadge from "./PersonalizationBadge";
 import WhyThisRecipe from "./WhyThisRecipe";
-import { Recipe } from "../types/recipe";
+import { Recipe } from "@/features/recipes/types/recipe";
 import { formatCurrency } from "@/lib/utils";
 
 type Props = {

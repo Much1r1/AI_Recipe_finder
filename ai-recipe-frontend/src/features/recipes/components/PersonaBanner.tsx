@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { User, Settings } from "lucide-react";
-import { getPersona } from "../lib/persona";
+import { getPersona } from "@/lib/persona";
 
 type Props = {
   onEdit?: () => void;

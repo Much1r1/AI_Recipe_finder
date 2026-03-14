@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Recipe } from "../types/recipe";
+import { Recipe } from "@/features/recipes/types/recipe";
 import RecipeCard from "./RecipeCard";
 
 interface RecipeListProps {

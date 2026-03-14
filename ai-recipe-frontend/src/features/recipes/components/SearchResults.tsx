@@ -4,7 +4,7 @@ import LoadingState from "./states/LoadingState";
 import EmptyState from "./states/EmptyState";
 import ErrorState from "./states/ErrorState";
 import RecipeCard from "./RecipeCard";
-import { Recipe } from "../types/recipe";
+import { Recipe } from "@/features/recipes/types/recipe";
 
 type Props = {
   recipes: Recipe[];
