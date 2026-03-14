@@ -46,6 +46,3 @@ Run backend tests:
 export PYTHONPATH=$PYTHONPATH:.
 python -m pytest
 ```
-
-## 📄 License
-MIT
