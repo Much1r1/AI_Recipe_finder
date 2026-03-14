@@ -1,4 +1,20 @@
 services:
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=quickbite
+      - POSTGRES_PASSWORD=quickbite
+      - POSTGRES_DB=quickbite_db
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
   backend:
     build:
       context: .
@@ -6,10 +22,15 @@ services:
     ports:
       - "8000:8000"
     environment:
+      - DATABASE_URL=postgresql://quickbite:quickbite@db:5432/quickbite_db
+      - REDIS_URL=redis://redis:6379/0
       - SPOONACULAR_API_KEY=${SPOONACULAR_API_KEY}
       - OLLAMA_URL=${OLLAMA_URL:-http://host.docker.internal:11434/api/generate}
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    depends_on:
+      - db
+      - redis
 
   frontend:
     build:
@@ -20,3 +41,6 @@ services:
       - "3000:80"
     depends_on:
       - backend
+
+volumes:
+  postgres_data:

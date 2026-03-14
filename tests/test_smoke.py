@@ -43,8 +43,8 @@ def test_search_recipes_smoke():
 from unittest.mock import patch, MagicMock
 from app.schemas.intent import IntentSchema
 
-@patch("app.api.v1.routes.recipes.parse_user_intent")
-@patch("app.api.v1.routes.recipes.search_recipes")
+@patch("app.api.v1.endpoints.recipes.parse_user_intent")
+@patch("app.api.v1.endpoints.recipes.search_recipes")
 def test_search_recipes_full_logic(mock_search, mock_parse):
     """
     Test the full search logic with mocked services to ensure:
