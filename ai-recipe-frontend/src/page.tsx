@@ -31,7 +31,7 @@ export default function Home() {
       const persona = getPersona() ?? "busy_professional";
       
       const res = await fetch(
-        "http://localhost:8000/api/recipes/recipes/search",
+        "https://ai-recipe-finder-gfdv.onrender.com/api/recipes/recipes/search",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -3,7 +3,7 @@ import unittest
 
 class TestVerifyEndpoint(unittest.TestCase):
     def test_random_fact_endpoint(self):
-        url = "http://localhost:8000/api/verify/random-fact"
+        url = "https://ai-recipe-finder-gfdv.onrender.com/api/verify/random-fact"
         try:
             response = requests.get(url)
             self.assertEqual(response.status_code, 200)

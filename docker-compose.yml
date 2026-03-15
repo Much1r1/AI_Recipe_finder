@@ -36,7 +36,7 @@ services:
     build:
       context: ./ai-recipe-frontend
       args:
-        - VITE_API_URL=http://localhost:8000
+        - VITE_API_URL=https://ai-recipe-finder-gfdv.onrender.com
     ports:
       - "3000:80"
     depends_on:

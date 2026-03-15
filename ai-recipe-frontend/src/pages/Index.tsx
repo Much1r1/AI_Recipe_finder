@@ -34,7 +34,7 @@ const Index = () => {
     setLoadingFact(undefined);
 
     // Fetch a fun fact while loading
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+    const apiUrl = import.meta.env.VITE_API_URL || "https://ai-recipe-finder-gfdv.onrender.com";
     fetch(`${apiUrl}/api/verify/random-fact`)
       .then(res => res.json())
       .then(data => setLoadingFact(data.weird_fact))
