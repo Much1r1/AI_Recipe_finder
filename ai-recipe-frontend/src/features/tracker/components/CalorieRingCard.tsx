@@ -43,14 +43,8 @@ const CalorieRingCard = ({ consumed, goal, macros }: CalorieRingCardProps) => {
   return (
     <Link to="/stats" className="block">
       <div className="glass-card p-6 flex flex-col gap-6 hover:bg-card/60 transition-colors">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h3 className="text-sm font-medium text-muted-foreground">Calories</h3>
-            <p className="text-3xl font-bold font-syne">{consumed}</p>
-            <p className="text-xs text-muted-foreground">kcal left: {Math.max(goal - consumed, 0)}</p>
-          </div>
-
-          <div className="relative w-24 h-24">
+        <div className="flex items-center gap-6">
+          <div className="relative w-24 h-24 shrink-0">
             <svg className="w-full h-full transform -rotate-90">
               <circle
                 cx="48"
@@ -78,6 +72,17 @@ const CalorieRingCard = ({ consumed, goal, macros }: CalorieRingCardProps) => {
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="text-sm font-bold">{Math.round(percentage)}%</span>
             </div>
+          </div>
+
+          <div className="space-y-1">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Calories</h3>
+            <div className="flex items-baseline gap-1">
+              <span className="text-4xl font-bold font-syne tracking-tighter">{consumed}</span>
+              <span className="text-sm text-muted-foreground font-medium">kcal</span>
+            </div>
+            <p className="text-xs font-medium text-primary/80">
+              {Math.max(goal - consumed, 0)} kcal remaining
+            </p>
           </div>
         </div>
 

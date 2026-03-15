@@ -14,7 +14,9 @@ import {
   GoalsPage,
   SnapPage,
   BatchCookPage,
-  ScannerPage
+  ScannerPage,
+  HydrationPage,
+  FastingPage
 } from "@/pages/Placeholders";
 
 const queryClient = new QueryClient();
@@ -38,6 +40,8 @@ const App = () => (
             <Route path="/meal-planner" element={<BatchCookPage />} />
             <Route path="/batch-cook" element={<BatchCookPage />} />
             <Route path="/scanner" element={<ScannerPage />} />
+            <Route path="/hydration" element={<HydrationPage />} />
+            <Route path="/fasting" element={<FastingPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -30,7 +30,7 @@ const FastingTracker = ({ protocol, startTime, totalHours }: FastingTrackerProps
   const circumference = 2 * Math.PI * 40;
 
   return (
-    <Link to="/tracker" className="block">
+    <Link to="/fasting" className="block">
       <div className="glass-card p-6 space-y-4 hover:bg-card/60 transition-colors">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

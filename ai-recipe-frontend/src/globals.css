@@ -56,7 +56,6 @@
 @layer base {
   * {
     @apply border-border;
-    border-width: 0.5px;
   }
   body {
     @apply bg-background text-foreground antialiased;

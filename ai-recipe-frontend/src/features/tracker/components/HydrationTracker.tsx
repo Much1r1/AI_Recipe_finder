@@ -18,7 +18,7 @@ const HydrationTracker = () => {
 
   return (
     <div className="glass-card p-6 space-y-4">
-      <Link to="/tracker" className="flex items-center justify-between group">
+      <Link to="/hydration" className="flex items-center justify-between group">
         <div className="flex items-center gap-2">
           <div className="p-2 bg-blue-500/20 rounded-xl group-hover:scale-110 transition-transform">
             <Droplet className="w-5 h-5 text-blue-400" />

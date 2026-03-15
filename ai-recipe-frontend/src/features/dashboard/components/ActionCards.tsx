@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 const ActionCards = () => {
   return (
     <div className="grid grid-cols-2 gap-4">
-      <Link to="/tracker" className="block">
+      <Link to="/snap" className="block">
         <motion.button
           whileHover={{ y: -4 }}
           className="glass-card p-5 text-left space-y-3 group w-full h-full hover:bg-card/60 transition-colors"
@@ -20,7 +20,7 @@ const ActionCards = () => {
         </motion.button>
       </Link>
 
-      <Link to="/tracker" className="block">
+      <Link to="/scanner" className="block">
         <motion.button
           whileHover={{ y: -4 }}
           className="glass-card p-5 text-left space-y-3 group w-full h-full hover:bg-card/60 transition-colors"

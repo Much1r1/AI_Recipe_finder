@@ -126,7 +126,7 @@ const Index = () => {
             transition={{ delay: 0.1 }}
             className="text-4xl font-bold font-syne tracking-tight"
           >
-            Ready to <span className="text-primary italic">thrive?</span>
+            Ready to <span className="text-primary">thrive?</span>
           </motion.h1>
         </section>
 
