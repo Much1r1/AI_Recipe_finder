@@ -47,3 +47,5 @@ export const GoalsPage = () => <PlaceholderPage title="Nutrition Goals" />;
 export const SnapPage = () => <PlaceholderPage title="AI Snap & Track" />;
 export const BatchCookPage = () => <PlaceholderPage title="Batch Cook Planner" />;
 export const ScannerPage = () => <PlaceholderPage title="Barcode Scanner" />;
+export const HydrationPage = () => <PlaceholderPage title="Drink Water Customization" />;
+export const FastingPage = () => <PlaceholderPage title="Fasting Tracker" />;
