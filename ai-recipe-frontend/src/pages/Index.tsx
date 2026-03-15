@@ -1,17 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { Utensils } from "lucide-react";
+import Header from "@/components/Header";
+import BottomNav from "@/components/BottomNav";
+import AmbientBackground from "@/components/AmbientBackground";
+import CalorieRingCard from "@/features/tracker/components/CalorieRingCard";
+import QuickActions from "@/features/dashboard/components/QuickActions";
+import HydrationTracker from "@/features/tracker/components/HydrationTracker";
+import FastingTracker from "@/features/tracker/components/FastingTracker";
+import MealScroll from "@/features/dashboard/components/MealScroll";
+import ActionCards from "@/features/dashboard/components/ActionCards";
+import BatchCookCard from "@/features/dashboard/components/BatchCookCard";
+import ShoppingListCard from "@/features/dashboard/components/ShoppingListCard";
+import CommunityCard from "@/features/dashboard/components/CommunityCard";
 import SearchBar from "@/features/recipes/components/SearchBar";
 import SearchResults from "@/features/recipes/components/SearchResults";
-import PersonaBanner from "@/features/recipes/components/PersonaBanner";
+import { FilterSection, Filters } from "@/features/recipes/components/FilterSection";
 import { Recipe } from "@/features/recipes/types/recipe";
-import { getPersona } from "@/lib/persona";
-import { Filters, FilterSection } from "@/features/recipes/components/FilterSection";
 import { useToast } from "@/hooks/use-toast";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Index = () => {
   const { toast } = useToast();
+  const { data: dashboardData, isLoading: isDashboardLoading } = useDashboardData();
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
   const [filters, setFilters] = useState<Filters>({
     time: null,
@@ -33,7 +45,6 @@ const Index = () => {
     setError(undefined);
     setLoadingFact(undefined);
 
-    // Fetch a fun fact while loading
     const apiUrl = import.meta.env.VITE_API_URL || "https://ai-recipe-finder-gfdv.onrender.com";
     fetch(`${apiUrl}/api/verify/random-fact`)
       .then(res => res.json())
@@ -41,7 +52,6 @@ const Index = () => {
       .catch(() => {});
 
     try {
-      // Construct full query from filters
       const filterStrings = [
         filters.time,
         filters.budget,
@@ -51,67 +61,35 @@ const Index = () => {
 
       const fullQuery = query + (filterStrings.length > 0 ? " " + filterStrings.join(", ") : "");
 
-      if (import.meta.env.DEV) {
-        console.log("Original query:", query);
-        console.log("Merged query with filters:", fullQuery);
-      }
-
       const res = await fetch(
         `${apiUrl}/api/recipes/search`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: fullQuery,
-          }),
+          body: JSON.stringify({ query: fullQuery }),
         }
       );
 
-      if (!res.ok) {
-        throw new Error('Failed to fetch recipes!');
-      }
+      if (!res.ok) throw new Error('Failed to fetch recipes!');
 
       const data = await res.json();
-      if (import.meta.env.DEV) {
-        console.log("Full API Response:", data);
-      }
-
-      // Robustly extract recipes from either .recipes or .results
       const rawRecipes: Recipe[] = (data.recipes && data.recipes.length > 0)
         ? data.recipes
         : (data.results || data.recipes || []);
 
-      if (import.meta.env.DEV) {
-        console.log("Raw recipes array:", rawRecipes);
-      }
-
       setParsedIntent(data.parsed_intent);
       setMessage(data.message);
 
-      // Light Defensive Deduplication (Backend is source of truth)
-      if (import.meta.env.DEV) {
-        console.log("Before dedup:", rawRecipes.length);
-      }
       const seenIds = new Set();
-      const seenBackups = new Set();
       const uniqueRecipes = rawRecipes.filter(recipe => {
-        // Use id as primary key
         if (recipe.id) {
           if (seenIds.has(recipe.id)) return false;
           seenIds.add(recipe.id);
           return true;
         }
-        // Fallback to title + source_url if id is missing
-        const backupKey = `${recipe.title}-${recipe.source_url}`;
-        if (seenBackups.has(backupKey)) return false;
-        seenBackups.add(backupKey);
         return true;
       });
 
-      if (import.meta.env.DEV) {
-        console.log("After dedup:", uniqueRecipes.length);
-        console.log("Array passed to setRecipes:", uniqueRecipes);
-      }
       setRecipes(uniqueRecipes);
     } catch (error) {
       console.error("Search failed:", error);
@@ -128,74 +106,110 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="pt-6 pb-4 px-4">
-        <div className="container max-w-4xl mx-auto">
-          <div className="flex items-center justify-center gap-2 animate-fade-in">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Utensils className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-serif text-xl font-semibold text-foreground">
-              QuickBite
-            </span>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background pb-32">
+      <AmbientBackground />
+      <Header />
 
-      <section className="pt-4 pb-4 sm:pt-8 sm:pb-6 px-4">
-        <div className="container max-w-4xl mx-auto text-center">
-          <PersonaBanner />
-          
-          <h1 className="font-serif text-2xl sm:text-4xl lg:text-5xl font-semibold text-foreground mb-3 animate-fade-in">
-            What will you cook today?
-          </h1>
-          <p className="text-muted-foreground text-lg max-w-md mx-auto mb-8 animate-fade-in">
-            Find recipes that fit your schedule, budget, and goals.
-          </p>
+      <main className="container max-w-2xl mx-auto pt-24 px-6 space-y-8">
+        {/* Welcome Section */}
+        <section className="space-y-1">
+          <motion.h2
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-muted-foreground font-medium"
+          >
+            Welcome back, Sarah
+          </motion.h2>
+          <motion.h1
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-4xl font-bold font-syne tracking-tight"
+          >
+            Ready to <span className="text-primary italic">thrive?</span>
+          </motion.h1>
+        </section>
 
-          <div className="animate-fade-in space-y-4">
-            <SearchBar onSearch={handleSearch} />
-
-            <div className="flex flex-col items-center">
-              <FilterSection
-                isExpanded={isFiltersExpanded}
-                onToggle={() => setIsFiltersExpanded(!isFiltersExpanded)}
-                filters={filters}
-                onFiltersChange={setFilters}
-              />
-
-              {isFiltersExpanded && (
-                <button
-                  onClick={() => setFilters({ time: null, budget: null, goal: null, ingredients: [] })}
-                  className="mt-4 text-xs font-medium text-muted-foreground hover:text-primary transition-colors underline underline-offset-4"
-                >
-                  Clear all filters
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-8 px-4">
-        <div className="container max-w-5xl mx-auto">
-          <SearchResults
-            recipes={recipes}
-            loading={isLoading}
-            hasSearched={hasSearched}
-            error={error}
-            parsedIntent={parsedIntent}
-            message={message}
-            loadingFact={loadingFact}
+        {/* Primary Stats */}
+        <section>
+          <CalorieRingCard
+            consumed={dashboardData.calories.consumed}
+            goal={dashboardData.calories.goal}
+            macros={dashboardData.macros}
           />
-        </div>
-      </section>
+        </section>
 
-      <footer className="py-8 px-4 text-center">
-        <p className="text-xs text-muted-foreground">
-          Recipes curated for busy professionals
-        </p>
-      </footer>
+        {/* Quick Actions */}
+        <section>
+          <QuickActions />
+        </section>
+
+        {/* Trackers Grid */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <HydrationTracker />
+          <FastingTracker
+            protocol={dashboardData.fasting.protocol}
+            startTime={dashboardData.fasting.startTime}
+            totalHours={dashboardData.fasting.totalHours}
+          />
+        </section>
+
+        {/* Search Section */}
+        <section className="space-y-4">
+          <div className="flex flex-col gap-4">
+            <SearchBar onSearch={handleSearch} />
+            <FilterSection
+              isExpanded={isFiltersExpanded}
+              onToggle={() => setIsFiltersExpanded(!isFiltersExpanded)}
+              filters={filters}
+              onFiltersChange={setFilters}
+            />
+          </div>
+
+          <AnimatePresence>
+            {hasSearched && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+              >
+                <SearchResults
+                  recipes={recipes}
+                  loading={isLoading}
+                  hasSearched={hasSearched}
+                  error={error}
+                  parsedIntent={parsedIntent}
+                  message={message}
+                  loadingFact={loadingFact}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </section>
+
+        {/* Meal Scroll */}
+        <section>
+          <MealScroll meals={dashboardData.meals} />
+        </section>
+
+        {/* Additional Actions */}
+        <section className="space-y-4">
+          <ActionCards />
+          <BatchCookCard />
+        </section>
+
+        {/* Shopping List */}
+        <section>
+          <ShoppingListCard />
+        </section>
+
+        {/* Community */}
+        <section>
+          <CommunityCard />
+        </section>
+      </main>
+
+      <BottomNav />
     </div>
   );
 };
