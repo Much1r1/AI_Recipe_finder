@@ -50,7 +50,7 @@ const Index = () => {
     setLoadingFact(undefined);
 
     const apiUrl = import.meta.env.VITE_API_URL || "https://ai-recipe-finder-gfdv.onrender.com";
-    fetch(`${apiUrl}/api/verify/random-fact`)
+    fetch(`${apiUrl}/api/v1/recipes/verify/random-fact`)
       .then(res => res.json())
       .then(data => setLoadingFact(data.weird_fact))
       .catch(() => {});
@@ -66,7 +66,7 @@ const Index = () => {
       const fullQuery = query + (filterStrings.length > 0 ? " " + filterStrings.join(", ") : "");
 
       const res = await fetch(
-        `${apiUrl}/api/recipes/search`,
+        `${apiUrl}/api/v1/recipes/search`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
