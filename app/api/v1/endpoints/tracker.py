@@ -3,7 +3,8 @@ from app.services.anthropic_service import (
     get_hydration_nudge,
     get_goal_prediction,
     get_hydration_insights,
-    chat_with_coach
+    chat_with_coach,
+    analyze_food_image
 )
 from typing import List, Dict
 
@@ -52,3 +53,8 @@ async def hydration_insights(history: List[Dict] = Body(...)):
 async def hydration_chat(message: str = Body(..., embed=True), history: List[Dict] = Body(...), weather: str = "Sunny"):
     response = await chat_with_coach(message, history, weather)
     return {"response": response}
+
+@router.post("/calories/analyze")
+async def analyze_calories(image_data: str = Body(..., embed=True)):
+    analysis = await analyze_food_image(image_data)
+    return {"analysis": analysis}
