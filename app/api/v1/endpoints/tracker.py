@@ -1,4 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Body
+from app.services.anthropic_service import (
+    get_hydration_nudge,
+    get_goal_prediction,
+    get_hydration_insights,
+    chat_with_coach
+)
+from typing import List, Dict
 
 router = APIRouter()
 
@@ -25,3 +32,23 @@ async def get_summary():
         },
         "meals": []
     }
+
+@router.get("/hydration/coach")
+async def hydration_coach(intake: int = 0, time_of_day: str = "morning", weather: str = "Sunny, 25°C"):
+    nudge = await get_hydration_nudge(intake, time_of_day, weather)
+    return {"nudge": nudge}
+
+@router.post("/hydration/goal-prediction")
+async def hydration_goal_prediction(history: List[Dict] = Body(...), forecast: str = "Mostly sunny, 27°C"):
+    prediction = await get_goal_prediction(history, forecast)
+    return prediction
+
+@router.post("/hydration/insights")
+async def hydration_insights(history: List[Dict] = Body(...)):
+    insights = await get_hydration_insights(history)
+    return {"insights": insights}
+
+@router.post("/hydration/chat")
+async def hydration_chat(message: str = Body(..., embed=True), history: List[Dict] = Body(...), weather: str = "Sunny"):
+    response = await chat_with_coach(message, history, weather)
+    return {"response": response}

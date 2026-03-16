@@ -26,7 +26,7 @@ const STEPS = [
       "Too tired after work",
       "Find cooking difficult",
       "Limited budget",
-      "Pickyt eaters",
+      "Picky eaters",
       "Lack of inspiration",
     ],
   },

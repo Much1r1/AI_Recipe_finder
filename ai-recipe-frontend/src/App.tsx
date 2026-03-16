@@ -9,6 +9,8 @@ import Landing from "@/pages/Landing";
 import Onboarding from "@/pages/Onboarding";
 import Auth from "@/pages/Auth";
 import SnapPageActual from "@/pages/SnapPage";
+import HydrationPageActual from "@/pages/HydrationPage";
+import FastingPageActual from "@/pages/FastingPage";
 import NotFound from "@/pages/NotFound";
 import {
   StatsPage,
@@ -47,8 +49,8 @@ const App = () => (
             <Route path="/meal-planner" element={<BatchCookPage />} />
             <Route path="/batch-cook" element={<BatchCookPage />} />
             <Route path="/scanner" element={<ScannerPage />} />
-            <Route path="/hydration" element={<HydrationPage />} />
-            <Route path="/fasting" element={<FastingPage />} />
+            <Route path="/hydration" element={<HydrationPageActual />} />
+            <Route path="/fasting" element={<FastingPageActual />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
