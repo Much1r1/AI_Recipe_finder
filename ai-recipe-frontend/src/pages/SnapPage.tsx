@@ -10,7 +10,9 @@ const SnapPage = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [hasPhoto, setHasPhoto] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (isScanning && !hasPhoto) {
@@ -37,21 +39,50 @@ const SnapPage = () => {
     }
   };
 
-  const takePhoto = () => {
+  const takePhoto = async () => {
+    if (!videoRef.current || !canvasRef.current) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext("2d");
+    if (!context) return;
+
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = canvas.toDataURL("image/jpeg");
+
     setIsAnalyzing(true);
-    setTimeout(() => {
-      setIsAnalyzing(false);
+    stopCamera();
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || "https://ai-recipe-finder-gfdv.onrender.com";
+      const res = await fetch(`${apiUrl}/api/v1/tracker/calories/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image_data: imageData })
+      });
+
+      if (!res.ok) throw new Error("Analysis failed");
+
+      const data = await res.json();
+      setAnalysisResult(data.analysis);
       setHasPhoto(true);
-      stopCamera();
-    }, 2000);
+    } catch (err) {
+      console.error("Analysis error:", err);
+      setAnalysisResult("Sorry, I couldn't analyze the image. Please try again.");
+      setHasPhoto(true);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
       <AmbientBackground />
 
       {/* Header */}
-      <header className="relative z-20 p-6 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent">
+      <header className="relative z-20 p-6 flex items-center justify-between bg-gradient-to-b from-background/80 to-transparent">
         <button onClick={() => navigate(-1)} className="p-2 rounded-full bg-white/10 backdrop-blur-md">
           <ArrowLeft className="w-6 h-6" />
         </button>
@@ -88,27 +119,28 @@ const SnapPage = () => {
         ) : (
           <div className="w-full max-w-md aspect-[3/4] rounded-3xl overflow-hidden relative border-2 border-white/20">
             {isAnalyzing ? (
-              <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-30 flex flex-col items-center justify-center space-y-4">
+              <div className="absolute inset-0 bg-background/40 backdrop-blur-sm z-30 flex flex-col items-center justify-center space-y-4">
                 <Loader2 className="w-12 h-12 text-primary animate-spin" />
                 <p className="font-bold font-syne animate-pulse text-primary uppercase tracking-widest">Analyzing Meal...</p>
               </div>
             ) : hasPhoto ? (
-              <div className="absolute inset-0 bg-zinc-900 flex flex-col items-center justify-center p-8 space-y-6">
+              <div className="absolute inset-0 bg-card flex flex-col items-center justify-center p-8 space-y-6 overflow-y-auto">
                 <Sparkles className="w-16 h-16 text-primary" />
-                <div className="text-center space-y-2">
-                  <h3 className="text-2xl font-bold font-syne">Match Found!</h3>
-                  <div className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-1">
-                    <p className="text-xl font-bold">Avocado Toast with Egg</p>
-                    <p className="text-primary font-bold">~ 420 kcal</p>
+                <div className="text-center space-y-2 w-full">
+                  <h3 className="text-2xl font-bold font-syne text-card-foreground">AI Analysis</h3>
+                  <div className="p-4 bg-muted/50 rounded-2xl border border-border space-y-2">
+                    <p className="text-sm text-left whitespace-pre-wrap text-foreground font-medium leading-relaxed">
+                      {analysisResult}
+                    </p>
                   </div>
                 </div>
                 <Button
                   onClick={() => navigate("/dashboard")}
-                  className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold"
+                  className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold shrink-0"
                 >
                   Log to Dashboard
                 </Button>
-                <button onClick={() => { setHasPhoto(false); setIsScanning(true); }} className="text-muted-foreground font-bold">
+                <button onClick={() => { setHasPhoto(false); setIsScanning(true); setAnalysisResult(null); }} className="text-muted-foreground font-bold shrink-0">
                   Retake
                 </button>
               </div>
@@ -120,6 +152,7 @@ const SnapPage = () => {
                   playsInline
                   className="w-full h-full object-cover"
                 />
+                <canvas ref={canvasRef} className="hidden" />
                 {/* Scanner Overlay */}
                 <div className="absolute inset-0 z-20 pointer-events-none">
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border-2 border-primary rounded-3xl opacity-50 shadow-[0_0_20px_rgba(200,245,96,0.3)]" />

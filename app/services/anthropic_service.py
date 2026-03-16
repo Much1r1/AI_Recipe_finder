@@ -75,6 +75,66 @@ async def get_hydration_insights(history: List[Dict]) -> List[str]:
     ]
 
 async def chat_with_coach(message: str, history: List[Dict], weather: str) -> str:
-    system_prompt = "You are a hydration coach inside a nutrition app. Be concise, friendly, and data-driven. You know the user's intake history and today's weather."
+    system_prompt = "You are a hydration coach inside a nutrition tracking app. Be concise, warm, and data-driven. Answer questions about hydration, water intake, daily goals, and healthy habits only."
     user_prompt = f"Context: Weather is {weather}. History: {json.dumps(history)}. User says: {message}"
     return await call_claude(system_prompt, user_prompt)
+
+async def analyze_food_image(image_data: str) -> str:
+    """
+    Analyze food image using Claude 3.5 Sonnet's vision capabilities.
+    image_data: base64 encoded image string (without data:image/xxx;base64, prefix)
+    """
+    if not ANTHROPIC_API_KEY:
+        print("⚠️ ANTHROPIC_API_KEY missing, using fallback")
+        return "I can't see the food right now, but I'm sure it's delicious!"
+
+    system_prompt = "You are a nutrition expert. The user has taken a photo of food they are about to eat. Identify the food item(s) in the image accurately. Return: food name, estimated calories, protein (g), carbs (g), fats (g). If the image does not contain food, respond with: 'No food detected in this image.'"
+
+    url = "https://api.anthropic.com/v1/messages"
+    headers = {
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json"
+    }
+
+    # Check if we need to extract media type
+    media_type = "image/jpeg"
+    if "," in image_data:
+        header, image_data = image_data.split(",", 1)
+        if "png" in header: media_type = "image/png"
+        elif "webp" in header: media_type = "image/webp"
+
+    payload = {
+        "model": CLAUDE_MODEL,
+        "max_tokens": 1024,
+        "system": system_prompt,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": media_type,
+                            "data": image_data,
+                        },
+                    },
+                    {
+                        "type": "text",
+                        "text": "What is in this image?"
+                    }
+                ],
+            }
+        ]
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=40) as client:
+            response = await client.post(url, headers=headers, json=payload)
+            response.raise_for_status()
+            data = response.json()
+            return data["content"][0]["text"]
+    except Exception as e:
+        print(f"⚠️ Claude vision call failed: {e}")
+        return "Sorry, I couldn't analyze the image. Please try again."
