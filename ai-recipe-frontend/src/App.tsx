@@ -11,18 +11,15 @@ import Auth from "@/pages/Auth";
 import SnapPageActual from "@/pages/SnapPage";
 import HydrationPageActual from "@/pages/HydrationPage";
 import FastingPageActual from "@/pages/FastingPage";
+import BatchCookPageActual from "@/pages/BatchCookPage";
+import ShoppingListPageActual from "@/pages/ShoppingListPage";
 import NotFound from "@/pages/NotFound";
 import {
   StatsPage,
   MealsPage,
-  ShopPage,
   CommunityPage,
   GoalsPage,
-  SnapPage,
-  BatchCookPage,
   ScannerPage,
-  HydrationPage,
-  FastingPage
 } from "@/pages/Placeholders";
 
 const queryClient = new QueryClient();
@@ -41,13 +38,14 @@ const App = () => (
             <Route path="/dashboard" element={<Index />} />
             <Route path="/stats" element={<StatsPage />} />
             <Route path="/meals" element={<MealsPage />} />
-            <Route path="/shop" element={<ShopPage />} />
+            <Route path="/shop" element={<ShoppingListPageActual />} />
+            <Route path="/shopping-list" element={<ShoppingListPageActual />} />
             <Route path="/community" element={<CommunityPage />} />
             <Route path="/goals" element={<GoalsPage />} />
             <Route path="/snap" element={<SnapPageActual />} />
             <Route path="/tracker" element={<SnapPageActual />} />
-            <Route path="/meal-planner" element={<BatchCookPage />} />
-            <Route path="/batch-cook" element={<BatchCookPage />} />
+            <Route path="/meal-planner" element={<BatchCookPageActual />} />
+            <Route path="/batch-cook" element={<BatchCookPageActual />} />
             <Route path="/scanner" element={<ScannerPage />} />
             <Route path="/hydration" element={<HydrationPageActual />} />
             <Route path="/fasting" element={<FastingPageActual />} />
