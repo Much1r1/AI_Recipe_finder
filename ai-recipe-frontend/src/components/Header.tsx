@@ -3,6 +3,7 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 const Header = () => {
   const { theme, setTheme } = useTheme();
@@ -32,12 +33,12 @@ const Header = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-background/80 backdrop-blur-md border-b border-border">
-      <div className="flex items-center gap-2">
+      <Link to="/dashboard" className="flex items-center gap-2">
         <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
           <span className="text-primary-foreground font-bold text-xl font-syne">Q</span>
         </div>
         <span className="text-xl font-bold font-syne tracking-tight">QuickBite</span>
-      </div>
+      </Link>
 
       <div className="flex items-center gap-4">
         <Button
