@@ -44,7 +44,6 @@ export const MealsPage = () => <PlaceholderPage title="Meal History" />;
 export const ShopPage = () => <PlaceholderPage title="Shopping List" />;
 export const CommunityPage = () => <PlaceholderPage title="Community" />;
 export const GoalsPage = () => <PlaceholderPage title="Nutrition Goals" />;
-export const SnapPage = () => <PlaceholderPage title="AI Snap & Track" />;
 export const BatchCookPage = () => <PlaceholderPage title="Batch Cook Planner" />;
 export const ScannerPage = () => <PlaceholderPage title="Barcode Scanner" />;
 export const HydrationPage = () => <PlaceholderPage title="Drink Water Customization" />;

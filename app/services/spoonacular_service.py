@@ -68,6 +68,10 @@ def search_recipes(
             params=params,
             timeout=10,
         )
+        print(f"--- [SEARCH TRACE] Spoonacular Status: {response.status_code} ---")
+        if response.status_code != 200:
+            print(f"--- [SEARCH TRACE] Spoonacular Error Body: {response.text} ---")
+
         response.raise_for_status()
         data = response.json()
         results = data.get("results", [])

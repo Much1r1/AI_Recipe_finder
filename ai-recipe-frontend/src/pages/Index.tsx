@@ -24,6 +24,10 @@ import { motion, AnimatePresence } from "framer-motion";
 const Index = () => {
   const { toast } = useToast();
   const { data: dashboardData, isLoading: isDashboardLoading } = useDashboardData();
+  const [user] = useState(() => {
+    const saved = localStorage.getItem("user");
+    return saved ? JSON.parse(saved) : { name: "Sarah" };
+  });
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
   const [filters, setFilters] = useState<Filters>({
     time: null,
@@ -118,7 +122,7 @@ const Index = () => {
             animate={{ opacity: 1, x: 0 }}
             className="text-muted-foreground font-medium"
           >
-            Welcome back, Sarah
+            Welcome back, {user.name}
           </motion.h2>
           <motion.h1
             initial={{ opacity: 0, x: -20 }}

@@ -29,9 +29,19 @@ def rank_recipes(
 
         # If it's a multi-word query, the exact intersection will likely be empty.
         # We relax the hard filter for longer queries.
-        query_is_complex = any(len(q.split()) > 2 for q in query_ingredients)
+        query_is_complex = any(len(q.split()) > 1 for q in query_ingredients)
         if not matched and not query_is_complex:
-            continue
+            # Check for partial matches in query_ingredients
+            has_partial = False
+            for q in query_ingredients:
+                for ing in ingredients:
+                    if q in ing or ing in q:
+                        has_partial = True
+                        break
+                if has_partial: break
+
+            if not has_partial:
+                continue
 
         score = 0.0
         reasons = []
