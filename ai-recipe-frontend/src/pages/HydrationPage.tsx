@@ -84,8 +84,13 @@ const HydrationPage = () => {
   useEffect(() => {
     // 1. Fetch AI Nudge
     fetch(`${apiUrl}/api/v1/tracker/hydration/coach?intake=${intake}&time_of_day=afternoon&weather=Sunny, 28°C`)
-      .then(res => res.json())
-      .then(data => setAiNudge(data.nudge))
+      .then(res => {
+        if (!res.ok) throw new Error("API error");
+        return res.json();
+      })
+      .then(data => {
+        if (data?.nudge) setAiNudge(data.nudge);
+      })
       .catch(() => setAiNudge("Stay focused! You're 50% through your daily goal. Drink a glass now."));
 
     // 2. Fetch AI Goal Prediction
@@ -94,10 +99,15 @@ const HydrationPage = () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(history)
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("API error");
+        return res.json();
+      })
       .then(data => {
-        setAiGoalInfo(data);
-        setGoal(data.goal);
+        if (data?.goal) {
+          setAiGoalInfo(data);
+          setGoal(data.goal);
+        }
       })
       .catch(() => setAiGoalInfo({ adjusted: 2500, reason: "Based on your typical active day." }));
 
@@ -107,8 +117,13 @@ const HydrationPage = () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(history)
     })
-      .then(res => res.json())
-      .then(data => setAiInsights(data.insights))
+      .then(res => {
+        if (!res.ok) throw new Error("API error");
+        return res.json();
+      })
+      .then(data => {
+        if (data?.insights) setAiInsights(data.insights);
+      })
       .catch(() => setAiInsights([
         "Intake is 15% higher than this time last Tuesday.",
         "You typically experience a 'slump' window at 3:00 PM.",
@@ -265,7 +280,7 @@ const HydrationPage = () => {
             <h3 className="font-bold font-syne text-lg">AI Insights</h3>
           </div>
           <div className="space-y-3">
-            {aiInsights.map((insight, i) => (
+            {(aiInsights || []).map((insight, i) => (
               <div key={i} className="flex gap-3 items-start group">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#c8f560] mt-1.5 group-hover:scale-150 transition-transform" />
                 <p className="text-sm text-white/60 leading-tight">{insight}</p>
