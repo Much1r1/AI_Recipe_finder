@@ -7,3 +7,4 @@
 
   ➜  Local:   http://localhost:8080/
   ➜  Network: http://192.168.0.2:8080/
+12:49:11 PM [vite] hmr update /src/pages/Index.tsx, /src/globals.css

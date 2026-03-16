@@ -16,6 +16,7 @@ app = FastAPI(
 # In production, these should be restricted
 origins = [
     "https://ai-recipe-finder-seven.vercel.app",
+    "https://ai-recipe-finder-git-main-elvis-projects-4d0bcc9f.vercel.app",
     "http://localhost:3000",
     "http://localhost:8080",
 ]
@@ -31,7 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(api_router, prefix="/api")
+app.include_router(api_router, prefix="/api/v1")
 
 @app.get("/")
 async def root():
