@@ -20,8 +20,16 @@ import { Button } from "@/components/ui/button";
 import { useApp } from "@/context/AppContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
+import { askClaude } from "@/lib/claude";
+import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
+
+interface AIInsight {
+  title: string;
+  description: string;
+  badge: string;
+}
 
 const HydrationPage = () => {
   const { state, setWater, setGoals, updateWeeklyWater, setNotificationPrefs } = useApp();
@@ -34,7 +42,7 @@ const HydrationPage = () => {
 
   const [aiNudge, setAiNudge] = useState("Analyzing your hydration patterns...");
   const [aiGoalInfo, setAiGoalInfo] = useState({ adjusted: 2500, reason: "Log some water to get AI personalized goals." });
-  const [aiInsights, setAiInsights] = useState<string[]>([]);
+  const [aiInsights, setAiInsights] = useState<AIInsight[]>([]);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<any[]>([
     { role: "assistant", content: "Hi! I'm your AI hydration coach. How can I help you today?" }
@@ -74,60 +82,51 @@ const HydrationPage = () => {
 
   // --- AI Integrations ---
   useEffect(() => {
-    // 1. Fetch AI Nudge
-    fetch(`${apiUrl}/api/v1/tracker/hydration/coach?intake=${intake}&time_of_day=afternoon&weather=Sunny, 28°C`)
-      .then(res => res.json())
-      .then(data => setAiNudge(data.nudge))
-      .catch(() => setAiNudge("Log your water intake to start receiving personalized coaching!"));
+    const fetchAI = async () => {
+      try {
+        const nudge = await askClaude(
+          "You are a hydration coach inside a nutrition app. Be concise, friendly, and data-driven. Provide a single-sentence nudge based on the user's intake.",
+          `User intake: ${intake}ml. Goal: ${goal}ml. Time: afternoon. Weather: Sunny, 28°C.`
+        );
+        setAiNudge(nudge);
 
-    // 2. Fetch AI Goal Prediction
-    if (history.length > 0) {
-      fetch(`${apiUrl}/api/v1/tracker/hydration/goal-prediction`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(history)
-      })
-        .then(res => res.json())
-        .then(data => {
-          setAiGoalInfo(data);
-          setGoal(data.goal);
-        })
-        .catch(() => setAiGoalInfo({ adjusted: 2500, reason: "Based on your typical activity level." }));
-    }
+        if (history.length > 0) {
+          const goalPred = await askClaude(
+            "You are a hydration expert. Analyze the user's water history and suggest a daily goal. Return ONLY JSON: { \"goal\": number, \"reason\": string }",
+            `History: ${JSON.stringify(history)}`
+          );
+          const data = JSON.parse(goalPred);
+          setAiGoalInfo({ adjusted: data.goal, reason: data.reason });
+          setGoals({ water: data.goal });
 
-    // 3. Fetch AI Insights
-    if (history.length > 0) {
-      fetch(`${apiUrl}/api/v1/tracker/hydration/insights`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(history)
-      })
-        .then(res => res.json())
-        .then(data => setAiInsights(data.insights))
-        .catch(() => {});
-    }
-  }, [history.length]);
+          const insightsJson = await askClaude(
+            "You are a nutrition analyst. Return ONLY a JSON array of 4 insight objects: [{ \"title\": string, \"description\": string, \"badge\": string }]. Be specific and data-driven.",
+            `User's weekly data: ${JSON.stringify(state.weeklyWater)}`
+          );
+          setAiInsights(JSON.parse(insightsJson));
+        }
+      } catch (err) {
+        console.error("AI Fetch Error:", err);
+      }
+    };
+    fetchAI();
+  }, [history.length, intake, goal]);
 
   const handleSendMessage = async () => {
     if (!userInput.trim()) return;
 
-    const userMsg = { role: "user", content: userInput };
+    const userMessage = userInput;
+    const userMsg = { role: "user", content: userMessage };
     setChatMessages(prev => [...prev, userMsg]);
     setUserInput("");
     setIsSending(true);
 
     try {
-      const res = await fetch(`${apiUrl}/api/v1/tracker/hydration/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: userInput,
-          history: history,
-          weather: "Sunny, 28°C"
-        })
-      });
-      const data = await res.json();
-      setChatMessages(prev => [...prev, { role: "assistant", content: data.response }]);
+      const reply = await askClaude(
+        "You are a hydration coach inside a nutrition app. Be concise, friendly, and data-driven. Only answer questions about hydration, water intake, and healthy habits.",
+        userMessage
+      );
+      setChatMessages(prev => [...prev, { role: "assistant", content: reply }]);
     } catch {
       setChatMessages(prev => [...prev, { role: "assistant", content: "I'm having trouble connecting right now, but remember to keep sipping water!" }]);
     } finally {
@@ -261,14 +260,19 @@ const HydrationPage = () => {
             <TrendingUp className="w-5 h-5 text-primary" />
             <h3 className="font-bold font-syne text-lg">AI Insights</h3>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {aiInsights.length > 0 ? aiInsights.map((insight, i) => (
-              <div key={i} className="flex gap-3 items-start group">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 group-hover:scale-150 transition-transform" />
-                <p className="text-sm text-muted-foreground leading-tight">{insight}</p>
+              <div key={i} className="space-y-2 p-3 bg-muted/30 rounded-xl border border-border/50">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-bold font-syne">{insight.title}</h4>
+                  <Badge variant="secondary" className="text-[8px] font-black uppercase bg-primary/10 text-primary">
+                    {insight.badge}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground leading-tight">{insight.description}</p>
               </div>
             )) : (
-              <p className="text-sm text-muted-foreground italic">Start tracking to unlock insights</p>
+              <p className="text-sm text-muted-foreground italic text-center py-4">Start tracking to unlock insights</p>
             )}
           </div>
         </section>

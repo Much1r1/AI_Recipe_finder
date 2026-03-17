@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Camera, X, Zap, Sparkles, ArrowLeft, Loader2 } from "lucide-react";
 import AmbientBackground from "@/components/AmbientBackground";
+import { askClaude } from "@/lib/claude";
 
 const SnapPage = () => {
   const navigate = useNavigate();
@@ -56,21 +57,18 @@ const SnapPage = () => {
     stopCamera();
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "https://ai-recipe-finder-gfdv.onrender.com";
-      const res = await fetch(`${apiUrl}/api/v1/tracker/calories/analyze`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image_data: imageData })
-      });
+      const result = await askClaude(
+        "You are a nutrition expert. The user photographed food. Return ONLY a JSON object: { \"food\": string, \"calories\": number, \"protein\": number, \"carbs\": number, \"fats\": number }. If no food detected return { \"food\": 'No food detected', \"calories\": 0, \"protein\": 0, \"carbs\": 0, \"fats\": 0 }",
+        `Analyze this food image: ${imageData}`
+      );
 
-      if (!res.ok) throw new Error("Analysis failed");
-
-      const data = await res.json();
-      setAnalysisResult(data.analysis);
+      const data = JSON.parse(result);
+      const formattedResult = `Food: ${data.food}\nCalories: ${data.calories} kcal\nProtein: ${data.protein}g\nCarbs: ${data.carbs}g\nFats: ${data.fats}g`;
+      setAnalysisResult(formattedResult);
       setHasPhoto(true);
     } catch (err) {
       console.error("Analysis error:", err);
-      setAnalysisResult("Sorry, I couldn't analyze the image. Please try again.");
+      setAnalysisResult("I encountered an error while analyzing the image. Please try again.");
       setHasPhoto(true);
     } finally {
       setIsAnalyzing(false);

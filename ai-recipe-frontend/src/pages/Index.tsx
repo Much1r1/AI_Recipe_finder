@@ -22,6 +22,7 @@ import { useApp } from "@/context/AppContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, X as CloseIcon } from "lucide-react";
+import { askClaude } from "@/lib/claude";
 
 const Index = () => {
   const { toast } = useToast();
@@ -65,45 +66,37 @@ const Index = () => {
         ...filters.ingredients
       ].filter(Boolean);
 
-      const fullQuery = query + (filterStrings.length > 0 ? " " + filterStrings.join(", ") : "");
+      const ingredients = query + (filterStrings.length > 0 ? " " + filterStrings.join(", ") : "");
 
-      const res = await fetch(
-        `${apiUrl}/api/v1/recipes/search`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: fullQuery }),
-        }
+      const result = await askClaude(
+        "You are a recipe expert. Return ONLY a JSON array of 3 recipes: [{ \"id\": string, \"title\": string, \"emoji\": string, \"calories\": number, \"ingredients\": string[], \"instructions\": string[], \"protein_score\": number, \"ready_in_minutes\": number, \"estimated_cost_kes\": number }]",
+        `Suggest healthy recipes using: ${ingredients}`
       );
 
-      if (!res.ok) throw new Error('Failed to fetch recipes!');
+      const recipesData = JSON.parse(result);
 
-      const data = await res.json();
-      const rawRecipes: Recipe[] = (data.recipes && data.recipes.length > 0)
-        ? data.recipes
-        : (data.results || data.recipes || []);
+      const mappedRecipes: Recipe[] = recipesData.map((r: any, i: number) => ({
+        id: r.id || `recipe-${Date.now()}-${i}`,
+        title: r.title || r.name || "Untitled Recipe",
+        image: null,
+        ingredients: r.ingredients || [],
+        instructions: r.steps || r.instructions || [],
+        ready_in_minutes: r.ready_in_minutes || 30,
+        calories: r.calories || 0,
+        estimated_cost_kes: r.estimated_cost_kes || 500,
+        protein_score: r.protein || r.protein_score || 0,
+        explanation: [`High in protein`, `Quick to prepare`]
+      }));
 
-      setParsedIntent(data.parsed_intent);
-      setMessage(data.message);
-
-      const seenIds = new Set();
-      const uniqueRecipes = rawRecipes.filter(recipe => {
-        if (recipe.id) {
-          if (seenIds.has(recipe.id)) return false;
-          seenIds.add(recipe.id);
-          return true;
-        }
-        return true;
-      });
-
-      setRecipes(uniqueRecipes);
+      setRecipes(mappedRecipes);
+      setMessage("Here are your AI-curated recipes.");
     } catch (error) {
       console.error("Search failed:", error);
-      setError("Failed to fetch recipes. Is the backend running?");
+      setError("Failed to fetch recipes. Please check your connection.");
       setRecipes([]);
       toast({
         title: "Search failed",
-        description: "Could not fetch recipes. Please check if the backend is running.",
+        description: "Could not fetch recipes. Please check your connection.",
         variant: "destructive",
       });
     } finally {
