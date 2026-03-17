@@ -1,19 +1,22 @@
-import { usePersistentState } from "@/hooks/use-dashboard-data";
+import { useApp } from "@/context/AppContext";
 import { motion } from "framer-motion";
 import { Droplet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 
 const HydrationTracker = () => {
-  const [cups, setCups] = usePersistentState<boolean[]>("hydration_cups", Array(8).fill(false).map((_, i) => i < 3));
+  const { state, setWater } = useApp();
 
   const toggleCup = (index: number) => {
-    const newCups = [...cups];
-    newCups[index] = !newCups[index];
-    setCups(newCups);
+    const wasFilled = index < state.today.cupsFilledCount;
+    if (wasFilled) {
+      setWater(Math.max(0, state.today.waterMl - 250), state.today.cupsFilledCount - 1);
+    } else {
+      setWater(state.today.waterMl + 250, state.today.cupsFilledCount + 1);
+    }
   };
 
-  const filledCount = cups.filter(Boolean).length;
+  const filledCount = state.today.cupsFilledCount;
   const percentage = (filledCount / 8) * 100;
 
   return (
@@ -31,21 +34,24 @@ const HydrationTracker = () => {
       </Link>
 
       <div className="grid grid-cols-4 gap-3">
-        {cups.map((filled, i) => (
-          <motion.button
-            key={i}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => toggleCup(i)}
-            className={cn(
-              "h-12 rounded-xl flex items-center justify-center transition-all duration-300 border",
-              filled
-                ? "bg-blue-500/20 border-blue-500/50 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]"
-                : "bg-muted border-border text-muted-foreground"
-            )}
-          >
-            <Droplet className={cn("w-6 h-6", filled && "fill-current")} />
-          </motion.button>
-        ))}
+        {Array(8).fill(0).map((_, i) => {
+          const filled = i < state.today.cupsFilledCount;
+          return (
+            <motion.button
+              key={i}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => toggleCup(i)}
+              className={cn(
+                "h-12 rounded-xl flex items-center justify-center transition-all duration-300 border",
+                filled
+                  ? "bg-blue-500/20 border-blue-500/50 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+                  : "bg-muted border-border text-muted-foreground"
+              )}
+            >
+              <Droplet className={cn("w-6 h-6", filled && "fill-current")} />
+            </motion.button>
+          );
+        })}
       </div>
 
       <div className="flex justify-between items-center text-xs text-muted-foreground pt-2">

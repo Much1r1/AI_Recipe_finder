@@ -19,7 +19,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { usePersistentState } from "@/hooks/use-dashboard-data";
+import { useApp } from "@/context/AppContext";
 import { MOCK_MEALS, Meal } from "@/data/batch-cook-data";
 import AmbientBackground from "@/components/AmbientBackground";
 
@@ -27,9 +27,10 @@ const DAYS = ["All Week", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const BatchCookPage = () => {
   const navigate = useNavigate();
+  const { state, setBatchMeals } = useApp();
   const [selectedDay, setSelectedDay] = useState("All Week");
-  const [selectedMealIds, setSelectedMealIds] = usePersistentState<string[]>("batch_selected_ids", []);
-  const [mealServings, setMealServings] = usePersistentState<Record<string, number>>("batch_meal_servings", {});
+  const selectedMealIds = state.batchMeals;
+  const [mealServings, setMealServings] = useState<Record<string, number>>({});
   const [expandedMealId, setExpandedMealId] = useState<string | null>(null);
 
   // Correctly initialize servings using useEffect
@@ -72,9 +73,10 @@ const BatchCookPage = () => {
   }, [selectedMeals, mealServings]);
 
   const toggleMealSelection = (id: string) => {
-    setSelectedMealIds(prev =>
-      prev.includes(id) ? prev.filter(mid => mid !== id) : [...prev, id]
-    );
+    const newSelection = selectedMealIds.includes(id)
+      ? selectedMealIds.filter(mid => mid !== id)
+      : [...selectedMealIds, id];
+    setBatchMeals(newSelection);
   };
 
   const adjustServings = (id: string, delta: number, e: React.MouseEvent) => {

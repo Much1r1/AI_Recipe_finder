@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useApp } from "@/context/AppContext";
 
 const Header = () => {
   const { theme, setTheme } = useTheme();
+  const { state } = useApp();
   const [mounted, setMounted] = useState(false);
 
   // Avoid hydration mismatch
@@ -49,10 +51,12 @@ const Header = () => {
         >
           {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
         </Button>
-        <Avatar className="w-10 h-10 border border-border">
-          <AvatarImage src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&fit=crop" />
-          <AvatarFallback><User /></AvatarFallback>
-        </Avatar>
+        <Link to="/profile">
+          <Avatar className="w-10 h-10 border border-border hover:ring-2 ring-primary transition-all">
+            <AvatarImage src={state.user.avatar} />
+            <AvatarFallback><User /></AvatarFallback>
+          </Avatar>
+        </Link>
       </div>
     </header>
   );
