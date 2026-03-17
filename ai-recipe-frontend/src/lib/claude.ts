@@ -3,7 +3,7 @@ export async function askClaude(system: string, message: string): Promise<string
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY!,
+      'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY || (import.meta as any).env.NEXT_PUBLIC_ANTHROPIC_API_KEY!,
       'anthropic-version': '2023-06-01'
     },
     body: JSON.stringify({

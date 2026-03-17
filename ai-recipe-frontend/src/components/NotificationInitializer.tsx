@@ -18,7 +18,7 @@ export const NotificationInitializer = () => {
     }
     return () => clearAllScheduled();
   }, [
-    state.notifications.permissionGranted,
+    state?.notifications?.permissionGranted ?? false,
     state.notifications.waterRemindersOn,
     state.notifications.waterIntervalMinutes,
     state.notifications.mealRemindersOn,

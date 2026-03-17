@@ -52,7 +52,8 @@ const Index = () => {
     setError(undefined);
     setLoadingFact(undefined);
 
-    const apiUrl = import.meta.env.VITE_API_URL || "https://ai-recipe-finder-gfdv.onrender.com";
+    const env = import.meta.env as any;
+    const apiUrl = env.VITE_API_URL || env.NEXT_PUBLIC_RECIPE_API_URL || env.VITE_RECIPE_API_URL || "https://ai-recipe-finder-gfdv.onrender.com";
     fetch(`${apiUrl}/api/v1/recipes/verify/random-fact`)
       .then(res => res.json())
       .then(data => setLoadingFact(data.weird_fact))
@@ -92,7 +93,15 @@ const Index = () => {
       setMessage("Here are your AI-curated recipes.");
     } catch (error) {
       console.error("Search failed:", error);
-      setError("Failed to fetch recipes. Please check your connection.");
+      try {
+        const errorMsg = await askClaude(
+          "You are a helpful nutrition assistant. The recipe search failed. Provide a short, friendly, and slightly humorous error message to the user.",
+          "The recipe search failed due to a connection issue."
+        );
+        setError(errorMsg);
+      } catch (e) {
+        setError("Failed to fetch recipes. Please check your connection.");
+      }
       setRecipes([]);
       toast({
         title: "Search failed",
