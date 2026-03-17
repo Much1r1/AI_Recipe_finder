@@ -8,6 +8,7 @@ import PersonaBanner from "@/components/PersonaBanner";
 import { Recipe } from "@/types/recipe";
 import { getPersona, setPersona } from "@/lib/persona";
 import { Filters, FilterSection } from "@/components/FilterSection";
+import { askClaude } from "@/lib/claude";
 
 export default function Home() {
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
@@ -51,7 +52,15 @@ export default function Home() {
       setRecipes(data.recipes || []);
     } catch (error) {
       console.error("Search failed:", error);
-      setError("Failed to fetch recipes. Please check your connection.");
+      try {
+        const errorMsg = await askClaude(
+          "You are a helpful nutrition assistant. The recipe search failed. Provide a short, friendly, and slightly humorous error message to the user.",
+          "The recipe search failed due to a connection issue."
+        );
+        setError(errorMsg);
+      } catch (e) {
+        setError("Failed to fetch recipes. Please check your connection.");
+      }
       setRecipes([]);
     } finally {
       setIsLoading(false);

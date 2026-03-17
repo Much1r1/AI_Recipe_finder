@@ -119,16 +119,42 @@ const DEFAULT_STATE: AppState = {
     waterRemindersOn: true,
     waterIntervalMinutes: 60,
     mealRemindersOn: true,
-    pushSubscription: null
+    pushSubscription: null,
   }
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const isObject = (item: any) => (item && typeof item === 'object' && !Array.isArray(item));
+
+const deepMerge = (target: any, source: any): any => {
+  const output = { ...target };
+  if (isObject(target) && isObject(source)) {
+    Object.keys(source).forEach(key => {
+      if (isObject(source[key])) {
+        if (!(key in target)) {
+          Object.assign(output, { [key]: source[key] });
+        } else {
+          output[key] = deepMerge(target[key], source[key]);
+        }
+      } else {
+        Object.assign(output, { [key]: source[key] });
+      }
+    });
+  }
+  return output;
+};
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AppState>(() => {
     const saved = localStorage.getItem("app_state");
-    return saved ? JSON.parse(saved) : DEFAULT_STATE;
+    if (!saved) return DEFAULT_STATE;
+    try {
+      const parsed = JSON.parse(saved);
+      return deepMerge(DEFAULT_STATE, parsed);
+    } catch (e) {
+      return DEFAULT_STATE;
+    }
   });
 
   useEffect(() => {
