@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AppProvider } from "@/context/AppContext";
+import { NotificationInitializer } from "@/components/NotificationInitializer";
 import Index from "@/pages/Index";
 import Landing from "@/pages/Landing";
 import Onboarding from "@/pages/Onboarding";
@@ -30,6 +31,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="dark" attribute="class">
       <AppProvider>
+        <NotificationInitializer />
         <TooltipProvider>
           <Toaster />
           <Sonner />

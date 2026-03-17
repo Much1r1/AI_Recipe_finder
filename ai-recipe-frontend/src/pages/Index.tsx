@@ -19,11 +19,14 @@ import { FilterSection, Filters } from "@/features/recipes/components/FilterSect
 import { Recipe } from "@/features/recipes/types/recipe";
 import { useToast } from "@/hooks/use-toast";
 import { useApp } from "@/context/AppContext";
+import { useNotifications } from "@/hooks/useNotifications";
 import { motion, AnimatePresence } from "framer-motion";
+import { Bell, X as CloseIcon } from "lucide-react";
 
 const Index = () => {
   const { toast } = useToast();
   const { state } = useApp();
+  const { requestPermission } = useNotifications();
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
   const [filters, setFilters] = useState<Filters>({
     time: null,
@@ -38,6 +41,9 @@ const Index = () => {
   const [parsedIntent, setParsedIntent] = useState<any>(null);
   const [message, setMessage] = useState<string | undefined>();
   const [loadingFact, setLoadingFact] = useState<string | undefined>();
+  const [showPermissionBanner, setShowPermissionBanner] = useState(() => {
+    return Notification.permission !== 'granted' && localStorage.getItem('hide_notification_banner') !== 'true';
+  });
 
   const handleSearch = async (query: string) => {
     setIsLoading(true);
@@ -111,6 +117,49 @@ const Index = () => {
       <Header />
 
       <main className="container max-w-2xl mx-auto pt-24 px-6 space-y-8">
+        {/* Notification Permission Banner */}
+        <AnimatePresence>
+          {showPermissionBanner && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="bg-card border border-primary/20 rounded-[24px] p-4 flex items-center justify-between shadow-lg mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Bell className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold font-syne">Stay on track</h4>
+                    <p className="text-[10px] text-muted-foreground">Enable reminders for water and meals.</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={async () => {
+                      await requestPermission();
+                      setShowPermissionBanner(false);
+                    }}
+                    className="bg-primary text-primary-foreground text-[10px] font-bold px-4 py-2 rounded-full hover:bg-primary/90 transition-colors"
+                  >
+                    Enable
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowPermissionBanner(false);
+                      localStorage.setItem('hide_notification_banner', 'true');
+                    }}
+                    className="p-2 text-muted-foreground hover:text-foreground"
+                  >
+                    <CloseIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         {/* Welcome Section */}
         <section className="space-y-1">
           <motion.h2

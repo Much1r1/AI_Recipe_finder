@@ -18,12 +18,14 @@ import {
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/context/AppContext";
+import { useNotifications } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 
 const HydrationPage = () => {
-  const { state, setWater, setGoals, updateWeeklyWater } = useApp();
+  const { state, setWater, setGoals, updateWeeklyWater, setNotificationPrefs } = useApp();
+  const { requestPermission } = useNotifications();
   // --- State ---
   const intake = state.today.waterMl;
   const goal = state.goals.water;
@@ -39,8 +41,9 @@ const HydrationPage = () => {
   ]);
   const [userInput, setUserInput] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [remindersEnabled, setRemindersEnabled] = useState(true);
-  const [reminderInterval, setReminderInterval] = useState(60);
+
+  const remindersEnabled = state.notifications.waterRemindersOn;
+  const reminderInterval = state.notifications.waterIntervalMinutes;
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -339,7 +342,7 @@ const HydrationPage = () => {
               {[30, 60, 90].map(m => (
                 <button
                   key={m}
-                  onClick={() => setReminderInterval(m)}
+                  onClick={() => setNotificationPrefs({ waterIntervalMinutes: m })}
                   className={cn(
                     "w-8 h-8 rounded-lg text-[10px] font-bold border-[0.5px] transition-all",
                     reminderInterval === m
@@ -352,7 +355,13 @@ const HydrationPage = () => {
               ))}
             </div>
             <button
-              onClick={() => setRemindersEnabled(!remindersEnabled)}
+              onClick={async () => {
+                if (!remindersEnabled && Notification.permission !== 'granted') {
+                  const granted = await requestPermission();
+                  if (!granted) return;
+                }
+                setNotificationPrefs({ waterRemindersOn: !remindersEnabled });
+              }}
               className={cn(
                 "w-12 h-6 rounded-full relative transition-colors duration-300",
                 remindersEnabled ? "bg-primary" : "bg-muted"
