@@ -37,6 +37,14 @@ export interface ShoppingItem {
   source: "batch" | "manual";
 }
 
+export interface NotificationPrefs {
+  permissionGranted: boolean;
+  waterRemindersOn: boolean;
+  waterIntervalMinutes: number;
+  mealRemindersOn: boolean;
+  pushSubscription: any | null;
+}
+
 export interface AppState {
   user: User;
   goals: Goals;
@@ -51,6 +59,7 @@ export interface AppState {
   batchMeals: string[]; // IDs of selected meals
   recentScans: any[];
   weeklyWater: { day: string; ml: number }[];
+  notifications: NotificationPrefs;
 }
 
 interface AppContextType {
@@ -65,6 +74,7 @@ interface AppContextType {
   setBatchMeals: (mealIds: string[]) => void;
   addRecentScan: (scan: any) => void;
   updateWeeklyWater: (day: string, ml: number) => void;
+  setNotificationPrefs: (prefs: Partial<NotificationPrefs>) => void;
 }
 
 const DEFAULT_STATE: AppState = {
@@ -103,7 +113,14 @@ const DEFAULT_STATE: AppState = {
     { day: "Fri", ml: 2200 },
     { day: "Sat", ml: 1500 },
     { day: "Sun", ml: 750 },
-  ]
+  ],
+  notifications: {
+    permissionGranted: false,
+    waterRemindersOn: true,
+    waterIntervalMinutes: 60,
+    mealRemindersOn: true,
+    pushSubscription: null
+  }
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -170,6 +187,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       weeklyWater: prev.weeklyWater.map(d => d.day === day ? { ...d, ml } : d)
     }));
 
+  const setNotificationPrefs = (prefs: Partial<NotificationPrefs>) =>
+    setState(prev => ({ ...prev, notifications: { ...prev.notifications, ...prefs } }));
+
   return (
     <AppContext.Provider value={{
       state,
@@ -182,7 +202,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       toggleShoppingItem,
       setBatchMeals,
       addRecentScan,
-      updateWeeklyWater
+      updateWeeklyWater,
+      setNotificationPrefs
     }}>
       {children}
     </AppContext.Provider>
