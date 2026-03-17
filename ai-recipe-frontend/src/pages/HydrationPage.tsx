@@ -17,17 +17,18 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { usePersistentState } from "@/hooks/use-dashboard-data";
+import { useApp } from "@/context/AppContext";
 import { cn } from "@/lib/utils";
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
 
 const HydrationPage = () => {
+  const { state, setWater, setGoals, updateWeeklyWater } = useApp();
   // --- State ---
-  const [intake, setIntake] = usePersistentState<number>("water_intake_ml", 0);
-  const [goal, setGoal] = usePersistentState<number>("water_goal_ml", 2500);
-  const [cups, setCups] = usePersistentState<boolean[]>("hydration_cups_grid", Array(8).fill(false));
-  const [history, setHistory] = usePersistentState<any[]>("water_history_log", []);
+  const intake = state.today.waterMl;
+  const goal = state.goals.water;
+  const cupsCount = state.today.cupsFilledCount;
+  const [history, setHistory] = useState<any[]>([]);
 
   const [aiNudge, setAiNudge] = useState("Analyzing your hydration patterns...");
   const [aiGoalInfo, setAiGoalInfo] = useState({ adjusted: 2500, reason: "Log some water to get AI personalized goals." });
@@ -49,27 +50,19 @@ const HydrationPage = () => {
 
   const addWater = (amount: number) => {
     const newIntake = intake + amount;
-    setIntake(newIntake);
+    setWater(newIntake);
     const now = new Date();
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     setHistory(prev => [{ time: timeStr, amount }, ...prev].slice(0, 20));
-
-    // Auto-fill cups based on 250ml units, max 8
-    const totalFilled = Math.min(8, Math.floor(newIntake / 250));
-    const newCups = Array(8).fill(false).map((_, i) => i < totalFilled);
-    setCups(newCups);
+    updateWeeklyWater("Sun", newIntake); // Simplified: update current day
   };
 
   const toggleCup = (index: number) => {
-    const newCups = [...cups];
-    const wasFilled = newCups[index];
-    newCups[index] = !wasFilled;
-    setCups(newCups);
-
+    const wasFilled = index < cupsCount;
     if (wasFilled) {
-      setIntake(prev => Math.max(0, prev - 250));
+      setWater(Math.max(0, intake - 250), cupsCount - 1);
     } else {
-      setIntake(prev => prev + 250);
+      setWater(intake + 250, cupsCount + 1);
       const now = new Date();
       const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       setHistory(prev => [{ time: timeStr, amount: 250 }, ...prev].slice(0, 20));
@@ -220,24 +213,27 @@ const HydrationPage = () => {
         <section className="space-y-4">
           <div className="flex justify-between items-end px-2">
             <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Daily Tracker</h3>
-            <span className="text-xs font-medium text-muted-foreground">{cups.filter(Boolean).length} / 8 glasses</span>
+            <span className="text-xs font-medium text-muted-foreground">{cupsCount} / 8 glasses</span>
           </div>
           <div className="grid grid-cols-4 gap-3">
-            {cups.map((filled, i) => (
-              <motion.button
-                key={i}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => toggleCup(i)}
-                className={cn(
-                  "h-16 rounded-[20px] flex items-center justify-center transition-all duration-300 border-[0.5px]",
-                  filled
-                    ? "bg-[#4fc3f7]/20 border-[#4fc3f7]/50 text-[#4fc3f7] shadow-[0_0_20px_rgba(79,195,247,0.2)]"
-                    : "bg-muted border-border text-muted-foreground/30"
-                )}
-              >
-                <Droplet className={cn("w-7 h-7", filled && "fill-current")} />
-              </motion.button>
-            ))}
+            {Array(8).fill(0).map((_, i) => {
+              const filled = i < cupsCount;
+              return (
+                <motion.button
+                  key={i}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => toggleCup(i)}
+                  className={cn(
+                    "h-16 rounded-[20px] flex items-center justify-center transition-all duration-300 border-[0.5px]",
+                    filled
+                      ? "bg-[#4fc3f7]/20 border-[#4fc3f7]/50 text-[#4fc3f7] shadow-[0_0_20px_rgba(79,195,247,0.2)]"
+                      : "bg-muted border-border text-muted-foreground/30"
+                  )}
+                >
+                  <Droplet className={cn("w-7 h-7", filled && "fill-current")} />
+                </motion.button>
+              );
+            })}
           </div>
         </section>
 
@@ -304,29 +300,27 @@ const HydrationPage = () => {
             <Calendar className="w-4 h-4 text-muted-foreground/20" />
           </div>
           <div className="bg-card border-[0.5px] border-border rounded-[24px] p-6 relative">
-            {history.length === 0 && (
-              <div className="absolute inset-0 flex items-center justify-center bg-card/60 backdrop-blur-[2px] rounded-[24px] z-10">
-                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">No data yet</p>
-              </div>
-            )}
             <div className="flex items-end justify-between h-32 gap-2">
-              {[0, 0, 0, 0, 0, 0, 0].map((val, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                  <div className="w-full relative bg-muted rounded-t-lg overflow-hidden h-24">
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: `${val}%` }}
-                      className={cn(
-                        "absolute bottom-0 left-0 right-0",
-                        val >= 90 ? "bg-primary" : "bg-[#4fc3f7]"
-                      )}
-                    />
+              {state.weeklyWater.map((item, i) => {
+                const val = Math.min(100, (item.ml / goal) * 100);
+                return (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                    <div className="w-full relative bg-muted rounded-t-lg overflow-hidden h-24">
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: `${val}%` }}
+                        className={cn(
+                          "absolute bottom-0 left-0 right-0",
+                          val >= 90 ? "bg-primary" : "bg-[#4fc3f7]"
+                        )}
+                      />
+                    </div>
+                    <span className="text-[10px] font-bold text-muted-foreground">
+                      {item.day[0]}
+                    </span>
                   </div>
-                  <span className="text-[10px] font-bold text-muted-foreground">
-                    {['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>

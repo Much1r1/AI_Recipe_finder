@@ -1,4 +1,4 @@
-import { Home, BarChart2, Utensils, ShoppingBag, Users } from "lucide-react";
+import { Home, BarChart2, Utensils, ShoppingBag, Users, ScanLine } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -7,7 +7,7 @@ const BottomNav = () => {
 
   const navItems = [
     { icon: Home, label: "Home", path: "/dashboard" },
-    { icon: BarChart2, label: "Stats", path: "/stats" },
+    { icon: ScanLine, label: "Scan", path: "/scanner" },
     { icon: Utensils, label: "Meals", path: "/meals" },
     { icon: ShoppingBag, label: "Shop", path: "/shop" },
     { icon: Users, label: "Community", path: "/community" },

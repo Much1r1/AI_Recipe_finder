@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -21,77 +21,73 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { usePersistentState } from "@/hooks/use-dashboard-data";
-import { MOCK_MEALS, Ingredient } from "@/data/batch-cook-data";
+import { useApp, ShoppingItem } from "@/context/AppContext";
+import { MOCK_MEALS } from "@/data/batch-cook-data";
 import AmbientBackground from "@/components/AmbientBackground";
-
-interface ShoppingItem extends Ingredient {
-  id: string;
-  checked: boolean;
-  source: "batch" | "manual";
-  mealId?: string;
-}
 
 const CATEGORIES = ["Produce", "Protein", "Grains & Legumes", "Pantry & Condiments"];
 
 const ShoppingListPage = () => {
   const navigate = useNavigate();
-  const [selectedMealIds] = usePersistentState<string[]>("batch_selected_ids", []);
-  const [mealServings] = usePersistentState<Record<string, number>>("batch_meal_servings", {});
-  const [manualItems, setManualItems] = usePersistentState<ShoppingItem[]>("shopping_manual_items", []);
-  const [checkedItems, setCheckedItems] = usePersistentState<string[]>("shopping_checked_ids", []);
+  const { state, setShoppingList, toggleShoppingItem } = useApp();
+  const selectedMealIds = state.batchMeals;
+  const shoppingList = state.shoppingList;
 
   const [newItemName, setNewItemName] = useState("");
   const [filterTab, setFilterTab] = useState("All");
   const [collapsedCategories, setCollapsedCategories] = useState<string[]>([]);
 
-  // Generate items from batch cook
-  const batchItems = useMemo(() => {
-    const items: ShoppingItem[] = [];
+  // Sync batch items to shopping list
+  useEffect(() => {
+    const manualItems = shoppingList.filter(item => item.source === "manual");
+    const existingBatchItems = shoppingList.filter(item => item.source === "batch");
+
+    const newBatchItems: ShoppingItem[] = [];
     MOCK_MEALS.forEach(meal => {
       if (selectedMealIds.includes(meal.id)) {
-        const servings = mealServings[meal.id] || meal.servings;
-        const multiplier = servings / meal.servings;
-
         meal.ingredients.forEach((ing, idx) => {
-          items.push({
-            ...ing,
-            id: `batch-${meal.id}-${idx}`,
-            amount: Math.round(ing.amount * multiplier * 10) / 10,
-            checked: checkedItems.includes(`batch-${meal.id}-${idx}`),
+          const id = `batch-${meal.id}-${idx}`;
+          const existing = existingBatchItems.find(i => i.id === id);
+          newBatchItems.push({
+            id,
+            name: ing.name,
+            qty: ing.amount, // Simplified: uses base amount
+            unit: ing.unit,
+            category: ing.category,
+            checked: existing ? existing.checked : false,
             source: "batch",
-            mealId: meal.id
           });
         });
       }
     });
-    return items;
-  }, [selectedMealIds, mealServings, checkedItems]);
 
-  const allItems = useMemo(() => {
-    return [...batchItems, ...manualItems];
-  }, [batchItems, manualItems]);
+    // Only update if the batch items part has changed (length or content)
+    const currentBatchIds = existingBatchItems.map(i => i.id).sort().join(",");
+    const nextBatchIds = newBatchItems.map(i => i.id).sort().join(",");
+
+    if (currentBatchIds !== nextBatchIds) {
+      setShoppingList([...newBatchItems, ...manualItems]);
+    }
+  }, [selectedMealIds]);
 
   const filteredItems = useMemo(() => {
-    if (filterTab === "Remaining") return allItems.filter(item => !checkedItems.includes(item.id));
-    if (filterTab === "In Cart") return allItems.filter(item => checkedItems.includes(item.id));
-    if (filterTab === "From Batch") return allItems.filter(item => item.source === "batch");
-    if (filterTab === "Manual") return allItems.filter(item => item.source === "manual");
-    return allItems;
-  }, [allItems, filterTab, checkedItems]);
+    if (filterTab === "Remaining") return shoppingList.filter(item => !item.checked);
+    if (filterTab === "In Cart") return shoppingList.filter(item => item.checked);
+    if (filterTab === "From Batch") return shoppingList.filter(item => item.source === "batch");
+    if (filterTab === "Manual") return shoppingList.filter(item => item.source === "manual");
+    return shoppingList;
+  }, [shoppingList, filterTab]);
 
   const summary = useMemo(() => {
-    const total = allItems.length;
-    const inCart = allItems.filter(item => checkedItems.includes(item.id)).length;
+    const total = shoppingList.length;
+    const inCart = shoppingList.filter(item => item.checked).length;
     const remaining = total - inCart;
     const mealsPrepped = selectedMealIds.length;
     return { total, inCart, remaining, mealsPrepped };
-  }, [allItems, checkedItems, selectedMealIds]);
+  }, [shoppingList, selectedMealIds]);
 
   const toggleItem = (id: string) => {
-    setCheckedItems(prev =>
-      prev.includes(id) ? prev.filter(iid => iid !== id) : [...prev, id]
-    );
+    toggleShoppingItem(id);
   };
 
   const addManualItem = () => {
@@ -99,24 +95,22 @@ const ShoppingListPage = () => {
     const newItem: ShoppingItem = {
       id: `manual-${Date.now()}`,
       name: newItemName,
-      amount: 1,
+      qty: 1,
       unit: "pc",
       category: "Pantry & Condiments",
       checked: false,
       source: "manual"
     };
-    setManualItems(prev => [...prev, newItem]);
+    setShoppingList([newItem, ...shoppingList]);
     setNewItemName("");
   };
 
   const deleteItem = (id: string) => {
-    setManualItems(prev => prev.filter(item => item.id !== id));
-    setCheckedItems(prev => prev.filter(iid => iid !== id));
+    setShoppingList(shoppingList.filter(item => item.id !== id));
   };
 
   const clearDone = () => {
-    setManualItems(prev => prev.filter(item => !checkedItems.includes(item.id)));
-    // For batch items, we just keep them but they remain checked
+    setShoppingList(shoppingList.filter(item => !item.checked));
   };
 
   const toggleCategory = (cat: string) => {
@@ -208,7 +202,7 @@ const ShoppingListPage = () => {
             <div>
               <p className="text-xs font-bold">Auto-generated from Batch Cook</p>
               <p className="text-[10px] text-muted-foreground">
-                {selectedMealIds.length} meals contributed {batchItems.length} items
+                {selectedMealIds.length} meals contributed {shoppingList.filter(i => i.source === 'batch').length} items
               </p>
             </div>
           </div>
@@ -219,10 +213,10 @@ const ShoppingListPage = () => {
           {CATEGORIES.map(category => {
             const itemsInCat = filteredItems.filter(item => item.category === category);
             if (itemsInCat.length === 0 && filterTab !== "All") return null;
-            if (itemsInCat.length === 0 && allItems.filter(i => i.category === category).length === 0) return null;
+            if (itemsInCat.length === 0 && shoppingList.filter(i => i.category === category).length === 0) return null;
 
             const isCollapsed = collapsedCategories.includes(category);
-            const checkedInCat = itemsInCat.filter(item => checkedItems.includes(item.id)).length;
+            const checkedInCat = itemsInCat.filter(item => item.checked).length;
             const progress = itemsInCat.length > 0 ? (checkedInCat / itemsInCat.length) * 100 : 0;
 
             return (
@@ -264,7 +258,7 @@ const ShoppingListPage = () => {
                               <div className="flex items-center gap-3">
                                 <Checkbox
                                   id={item.id}
-                                  checked={checkedItems.includes(item.id)}
+                                  checked={item.checked}
                                   onCheckedChange={() => toggleItem(item.id)}
                                   className="rounded-md border-muted-foreground/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                 />
@@ -272,13 +266,13 @@ const ShoppingListPage = () => {
                                   htmlFor={item.id}
                                   className={cn(
                                     "text-sm transition-all cursor-pointer",
-                                    checkedItems.includes(item.id) ? "text-muted-foreground line-through" : "text-foreground font-medium"
+                                    item.checked ? "text-muted-foreground line-through" : "text-foreground font-medium"
                                   )}
                                 >
                                   {item.name}
                                 </label>
                                 <span className="text-[10px] text-muted-foreground">
-                                  {item.amount} {item.unit}
+                                  {item.qty} {item.unit}
                                 </span>
                               </div>
                               <div className="flex items-center gap-2">

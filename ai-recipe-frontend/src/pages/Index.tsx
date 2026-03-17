@@ -18,16 +18,12 @@ import SearchResults from "@/features/recipes/components/SearchResults";
 import { FilterSection, Filters } from "@/features/recipes/components/FilterSection";
 import { Recipe } from "@/features/recipes/types/recipe";
 import { useToast } from "@/hooks/use-toast";
-import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { useApp } from "@/context/AppContext";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Index = () => {
   const { toast } = useToast();
-  const { data: dashboardData, isLoading: isDashboardLoading } = useDashboardData();
-  const [user] = useState(() => {
-    const saved = localStorage.getItem("user");
-    return saved ? JSON.parse(saved) : { name: "Sarah" };
-  });
+  const { state } = useApp();
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
   const [filters, setFilters] = useState<Filters>({
     time: null,
@@ -122,7 +118,7 @@ const Index = () => {
             animate={{ opacity: 1, x: 0 }}
             className="text-muted-foreground font-medium"
           >
-            Welcome back, {user.name}
+            Welcome back, {state.user.name}
           </motion.h2>
           <motion.h1
             initial={{ opacity: 0, x: -20 }}
@@ -137,9 +133,13 @@ const Index = () => {
         {/* Primary Stats */}
         <section>
           <CalorieRingCard
-            consumed={dashboardData.calories.consumed}
-            goal={dashboardData.calories.goal}
-            macros={dashboardData.macros}
+            consumed={state.today.caloriesConsumed}
+            goal={state.goals.calories}
+            macros={{
+              protein: { current: Number(state.today.meals.reduce((acc, m) => acc + (Number(m.protein) || 0), 0)), goal: state.goals.protein },
+              carbs: { current: Number(state.today.meals.reduce((acc, m) => acc + (Number(m.carbs) || 0), 0)), goal: state.goals.carbs },
+              fats: { current: Number(state.today.meals.reduce((acc, m) => acc + (Number(m.fats) || 0), 0)), goal: state.goals.fats },
+            }}
           />
         </section>
 
@@ -152,9 +152,9 @@ const Index = () => {
         <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <HydrationTracker />
           <FastingTracker
-            protocol={dashboardData.fasting.protocol}
-            startTime={dashboardData.fasting.startTime}
-            totalHours={dashboardData.fasting.totalHours}
+            protocol="16:8"
+            startTime={state.today.fastingStart}
+            totalHours={16}
           />
         </section>
 
@@ -193,7 +193,7 @@ const Index = () => {
 
         {/* Meal Scroll */}
         <section>
-          <MealScroll meals={dashboardData.meals} />
+          <MealScroll meals={state.today.meals} />
         </section>
 
         {/* Additional Actions */}
