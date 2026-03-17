@@ -51,7 +51,7 @@ export default function Home() {
       setRecipes(data.recipes || []);
     } catch (error) {
       console.error("Search failed:", error);
-      setError("Failed to fetch recipes. Is the backend running?");
+      setError("Failed to fetch recipes. Please check your connection.");
       setRecipes([]);
     } finally {
       setIsLoading(false);
