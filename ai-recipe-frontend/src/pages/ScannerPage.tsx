@@ -7,14 +7,11 @@ import {
   ZoomIn,
   ScanLine,
   Plus,
-  ChevronRight,
-  Search,
+  Loader2,
   Barcode,
   Keyboard,
-  Check,
-  Loader2,
-  Package,
-  Info
+  Search,
+  Package
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -22,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { useApp } from "@/context/AppContext";
 import { cn } from "@/lib/utils";
 import AmbientBackground from "@/components/AmbientBackground";
+import { BrowserMultiFormatReader } from '@zxing/browser';
 
 const ScannerPage = () => {
   const navigate = useNavigate();
@@ -32,6 +30,9 @@ const ScannerPage = () => {
   const [result, setResult] = useState<any | null>(null);
   const [barcodeInput, setBarcodeInput] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [showManualFallback, setShowManualFallback] = useState(false);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const scanProduct = async (barcode: string) => {
     setLoading(true);
@@ -72,6 +73,45 @@ const ScannerPage = () => {
     }
   };
 
+  useEffect(() => {
+    if (activeTab !== 'scan') return;
+
+    let stream: MediaStream | null = null;
+    const codeReader = new BrowserMultiFormatReader();
+    let controls: any = null;
+
+    const startCamera = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } }
+        });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          // Start decoding from the video element
+          controls = await codeReader.decodeFromVideoDevice(undefined, videoRef.current, (result, error) => {
+            if (result) {
+              const barcode = result.getText();
+              scanProduct(barcode);
+            }
+          });
+        }
+      } catch (err) {
+        console.error("Camera access denied:", err);
+        setShowManualFallback(true);
+        setActiveTab("manual");
+      }
+    };
+
+    if (scanning && !result) {
+      startCamera();
+    }
+
+    return () => {
+      if (controls) controls.stop();
+      if (stream) stream.getTracks().forEach(t => t.stop());
+    };
+  }, [activeTab, scanning, result]);
+
   const handleAddToToday = () => {
     if (!result) return;
     addMeal({
@@ -96,21 +136,10 @@ const ScannerPage = () => {
     setScanning(true);
   };
 
-  // Simulate a scan after 3 seconds if in scan mode
-  useEffect(() => {
-    if (activeTab === 'scan' && scanning && !result) {
-      const timer = setTimeout(() => {
-        scanProduct("3017620422003"); // Nutella example
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [activeTab, scanning, result]);
-
   return (
     <div className="min-h-screen bg-background text-foreground pb-20 relative overflow-hidden">
       <AmbientBackground />
 
-      {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full transition-colors">
@@ -124,33 +153,33 @@ const ScannerPage = () => {
       </header>
 
       <main className="container max-w-lg mx-auto pt-24 px-6 space-y-6 relative z-10">
-
-        {/* Scanner Viewport */}
         <div className="relative aspect-[4/5] bg-black rounded-[40px] border-4 border-muted-foreground/20 overflow-hidden group shadow-2xl">
-          {activeTab === "scan" && scanning && (
+          {activeTab === "scan" && scanning && !result && (
             <div className="absolute inset-0">
-              <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80')] bg-cover bg-center opacity-40 grayscale" />
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+                style={{ borderRadius: '24px' }}
+              />
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="relative w-64 h-64 border-2 border-white/20 rounded-3xl">
-                  {/* Corners */}
                   <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-xl" />
                   <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-xl" />
                   <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-xl" />
                   <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-xl" />
 
-                  {/* Scan Line */}
                   <motion.div
                     animate={{ top: ["10%", "90%", "10%"] }}
                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                     className="absolute left-4 right-4 h-0.5 bg-primary shadow-[0_0_15px_rgba(var(--primary),0.8)] z-10"
                   />
-
-                  {/* Center Dot */}
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-primary rounded-full animate-ping" />
                 </div>
               </div>
 
-              {/* Controls Overlay */}
               <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-6">
                 <button className="p-4 bg-white/10 backdrop-blur-md rounded-full border border-white/20 text-white hover:bg-white/20 transition-all">
                   <Flashlight size={24} />
@@ -207,7 +236,6 @@ const ScannerPage = () => {
           )}
         </div>
 
-        {/* Mode Tabs */}
         <div className="flex p-1 bg-muted rounded-2xl">
           {[
             { id: "scan", label: "Scan", icon: <Barcode size={14} /> },
@@ -232,7 +260,6 @@ const ScannerPage = () => {
           ))}
         </div>
 
-        {/* Result Card Slide Up */}
         <AnimatePresence>
           {result && (
             <motion.div
@@ -262,7 +289,6 @@ const ScannerPage = () => {
                 </div>
               </div>
 
-              {/* Macro Row */}
               <div className="grid grid-cols-3 gap-3">
                 {[
                   { label: "Protein", value: result.macros.protein, unit: "g", color: "bg-blue-500" },
@@ -279,7 +305,6 @@ const ScannerPage = () => {
                 ))}
               </div>
 
-              {/* Detailed Grid */}
               <div className="bg-muted/30 rounded-2xl p-4 grid grid-cols-2 gap-x-6 gap-y-3">
                 {[
                   { label: "Sugar", value: result.details.sugar, unit: "g" },
@@ -313,7 +338,6 @@ const ScannerPage = () => {
           )}
         </AnimatePresence>
 
-        {/* Recent Scans List */}
         {!result && state.recentScans.length > 0 && (
           <section className="space-y-4">
             <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground px-2">Recent Scans</h3>
@@ -353,19 +377,6 @@ const ScannerPage = () => {
             </div>
           </section>
         )}
-
-        {!result && state.recentScans.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 text-center space-y-4 opacity-40">
-            <div className="w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground flex items-center justify-center">
-              <ScanLine size={32} />
-            </div>
-            <div>
-              <p className="text-sm font-bold font-syne">No scans yet</p>
-              <p className="text-[10px] font-medium uppercase tracking-widest">History will appear here</p>
-            </div>
-          </div>
-        )}
-
         <div className="h-20" />
       </main>
     </div>

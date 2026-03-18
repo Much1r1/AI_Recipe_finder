@@ -14,7 +14,7 @@ def test_search_recipes_smoke():
     messy_query = "i want some low carb italian dinner with chicken and no gluten cheap"
 
     response = client.post(
-        "/api/recipes/search",
+        "/api/v1/recipes/search",
         json={"query": messy_query}
     )
 
@@ -75,7 +75,7 @@ def test_search_recipes_full_logic(mock_search, mock_parse):
     ]
 
     response = client.post(
-        "/api/recipes/search",
+        "/api/v1/recipes/search",
         json={"query": "low carb chicken"}
     )
 

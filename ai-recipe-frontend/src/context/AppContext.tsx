@@ -79,46 +79,43 @@ interface AppContextType {
 
 const DEFAULT_STATE: AppState = {
   user: {
-    name: "Sarah Muchiri",
+    name: "User",
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&fit=crop",
-    streak: 12,
-    joinDate: "Jan 2024",
-    plan: "Pro"
+    streak: 0,
+    joinDate: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+    plan: "Free"
   },
   goals: {
-    calories: 2200,
-    protein: 150,
+    calories: 2000,
+    protein: 50,
     carbs: 250,
     fats: 70,
-    water: 2500
+    water: 2000
   },
   today: {
-    caloriesConsumed: 1450,
-    waterMl: 750,
-    meals: [
-      { id: 1, name: "Berry Oatmeal", kcal: 320, protein: 12, carbs: 45, fats: 8, emoji: "🥣", time: "08:30 AM" },
-      { id: 2, name: "Grilled Salmon", kcal: 540, protein: 42, carbs: 0, fats: 22, emoji: "🐟", time: "01:15 PM" },
-    ],
-    fastingStart: new Date(new Date().getTime() - 12.5 * 60 * 60 * 1000).toISOString(),
-    cupsFilledCount: 3
+    caloriesConsumed: 0,
+    waterMl: 0,
+    meals: [],
+    fastingStart: new Date().toISOString(),
+    cupsFilledCount: 0
   },
   shoppingList: [],
   batchMeals: [],
   recentScans: [],
   weeklyWater: [
-    { day: "Mon", ml: 2100 },
-    { day: "Tue", ml: 2400 },
-    { day: "Wed", ml: 1800 },
-    { day: "Thu", ml: 2500 },
-    { day: "Fri", ml: 2200 },
-    { day: "Sat", ml: 1500 },
-    { day: "Sun", ml: 750 },
+    { day: "Mon", ml: 0 },
+    { day: "Tue", ml: 0 },
+    { day: "Wed", ml: 0 },
+    { day: "Thu", ml: 0 },
+    { day: "Fri", ml: 0 },
+    { day: "Sat", ml: 0 },
+    { day: "Sun", ml: 0 },
   ],
   notifications: {
     permissionGranted: false,
-    waterRemindersOn: true,
+    waterRemindersOn: false,
     waterIntervalMinutes: 60,
-    mealRemindersOn: true,
+    mealRemindersOn: false,
     pushSubscription: null,
   }
 };
