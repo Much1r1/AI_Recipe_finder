@@ -34,12 +34,16 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUser({
-          name: user.email?.split('@')[0] || "User",
-          joinDate: new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-        });
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUser({
+            name: user.email?.split('@')[0] || "User",
+            joinDate: new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+          });
+        }
+      } catch (err) {
+        console.error("Auth fetch failed:", err);
       }
     };
     fetchUser();
@@ -62,8 +66,13 @@ const ProfilePage = () => {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/auth");
+    try {
+      await supabase.auth.signOut();
+      navigate("/auth");
+    } catch (err) {
+      console.error("Sign out failed:", err);
+      navigate("/auth");
+    }
   };
 
   return (

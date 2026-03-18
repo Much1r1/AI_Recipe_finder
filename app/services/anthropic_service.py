@@ -4,7 +4,7 @@ import json
 from typing import List, Dict, Optional
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-CLAUDE_MODEL = "claude-sonnet-4-20250514"
+CLAUDE_MODEL = "claude-3-5-sonnet-20240620"
 
 async def call_claude(system_prompt: str, user_prompt: str) -> str:
     if not ANTHROPIC_API_KEY:
