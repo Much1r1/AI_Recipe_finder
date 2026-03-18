@@ -15,41 +15,61 @@ import {
   Download,
   Trash2,
   LogOut,
-  Settings,
-  Shield,
-  CreditCard
+  Shield
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useApp } from "@/context/AppContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AmbientBackground from "@/components/AmbientBackground";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
-  const { state, setGoals } = useApp();
+  const { state, setGoals, setUser } = useApp();
   const [editingGoal, setEditingGoal] = useState<string | null>(null);
   const [tempGoals, setTempGoals] = useState(state.goals);
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUser({
+          name: user.email?.split('@')[0] || "User",
+          joinDate: new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+        });
+      }
+    };
+    fetchUser();
+  }, []);
+
+  // Derive badges earned from real data
+  const mealCount = state.today.meals.length; // Simplified for MVP
   const ACHIEVEMENTS = [
     { id: "week-warrior", title: "Week Warrior", icon: "🔥", desc: "7+ day streak", requirement: 7, value: state.user.streak },
-    { id: "hydration-hero", title: "Hydration Hero", icon: "💧", desc: "Water goal 5 days", requirement: 5, value: 3 }, // Mock value
+    { id: "hydration-hero", title: "Hydration Hero", icon: "💧", desc: "Water goal 5 days", requirement: 5, value: 0 },
     { id: "meal-prepper", title: "Meal Prepper", icon: "🍱", desc: "First batch cook", requirement: 1, value: state.batchMeals.length > 0 ? 1 : 0 },
     { id: "30-day-legend", title: "30 Day Legend", icon: "👑", desc: "30 day streak", requirement: 30, value: state.user.streak },
   ];
+
+  const badgesEarned = ACHIEVEMENTS.filter(ach => ach.value >= ach.requirement).length;
 
   const handleSaveGoal = (key: keyof typeof state.goals) => {
     setGoals({ [key]: Number(tempGoals[key]) });
     setEditingGoal(null);
   };
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground pb-20 relative overflow-hidden">
       <AmbientBackground />
 
-      {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full transition-colors">
@@ -61,7 +81,6 @@ const ProfilePage = () => {
       </header>
 
       <main className="container max-w-lg mx-auto pt-24 px-6 space-y-8 relative z-10">
-        {/* Avatar Section */}
         <section className="flex flex-col items-center text-center space-y-4">
           <div className="relative">
             <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-primary to-blue-500 shadow-xl shadow-primary/20">
@@ -89,18 +108,17 @@ const ProfilePage = () => {
             </Badge>
             <Badge variant="outline" className="rounded-full bg-card px-3 py-1 border-border flex gap-1.5 items-center">
               <Award size={12} className="text-primary" />
-              <span className="text-[10px] font-bold">Rank: Silver</span>
+              <span className="text-[10px] font-bold">Rank: {state.user.streak > 30 ? "Gold" : state.user.streak > 7 ? "Silver" : "Bronze"}</span>
             </Badge>
           </div>
         </section>
 
-        {/* Streak Stats Strip */}
         <section className="grid grid-cols-4 gap-2">
           {[
             { label: "Streak", value: `${state.user.streak}d`, icon: <TrendingUp size={14} className="text-orange-500" /> },
-            { label: "Meals", value: "124", icon: <Utensils size={14} className="text-blue-500" /> },
-            { label: "Goals", value: "85%", icon: <Target size={14} className="text-primary" /> },
-            { label: "Badges", value: "12", icon: <Award size={14} className="text-purple-500" /> }
+            { label: "Meals", value: mealCount, icon: <Utensils size={14} className="text-blue-500" /> },
+            { label: "Goals", value: "—", icon: <Target size={14} className="text-primary" /> },
+            { label: "Badges", value: badgesEarned, icon: <Award size={14} className="text-purple-500" /> }
           ].map((stat, i) => (
             <div key={i} className="glass-card p-3 flex flex-col items-center gap-1">
               {stat.icon}
@@ -110,7 +128,6 @@ const ProfilePage = () => {
           ))}
         </section>
 
-        {/* Nutrition Goals Card */}
         <section className="bg-card border border-border rounded-[32px] overflow-hidden">
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between">
@@ -165,7 +182,6 @@ const ProfilePage = () => {
           </div>
         </section>
 
-        {/* Achievements Grid */}
         <section className="space-y-4">
           <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground px-2">Achievements</h3>
           <div className="grid grid-cols-2 gap-3">
@@ -197,52 +213,21 @@ const ProfilePage = () => {
           </div>
         </section>
 
-        {/* Connected Devices */}
-        <section className="bg-card border border-border rounded-[32px] overflow-hidden p-6 space-y-4">
-          <h3 className="font-bold font-syne text-lg">Connected Devices</h3>
-          <div className="space-y-3">
-            {[
-              { name: "Apple Watch", icon: <Watch size={18} />, status: "On", connected: true },
-              { name: "Google Fit", icon: <Activity size={18} />, status: "Off", connected: false },
-              { name: "MyFitnessPal", icon: <Activity size={18} />, status: "Connect", connected: false },
-              { name: "Apple Health", icon: <Activity size={18} />, status: "Connect", connected: false }
-            ].map((dev, i) => (
-              <div key={i} className="flex items-center justify-between p-3 rounded-2xl bg-muted/30 border border-border/30">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
-                    {dev.icon}
-                  </div>
-                  <span className="text-sm font-bold">{dev.name}</span>
-                </div>
-                <Button
-                  variant={dev.connected ? "outline" : "secondary"}
-                  size="sm"
-                  className={cn("text-[10px] font-black uppercase rounded-xl h-8 px-4", dev.connected && "border-green-500/50 text-green-500")}
-                >
-                  {dev.status}
-                </Button>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Subscription Card */}
         <section className="bg-gradient-to-br from-primary/20 to-blue-500/20 border border-primary/30 rounded-[32px] p-6 relative overflow-hidden group">
           <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:scale-150 transition-transform" />
           <div className="relative z-10 flex justify-between items-start">
             <div>
               <Badge className="bg-primary text-primary-foreground font-black text-[10px] uppercase mb-2">Active Plan</Badge>
-              <h3 className="text-2xl font-black font-syne">{state.user.plan} Pro</h3>
-              <p className="text-xs text-muted-foreground mt-1">Renews on Oct 12, 2024</p>
+              <h3 className="text-2xl font-black font-syne">{state.user.plan} Plan</h3>
+              <p className="text-xs text-muted-foreground mt-1">Free Tier</p>
             </div>
-            <p className="text-xl font-black font-syne">$9.99<span className="text-[10px] text-muted-foreground">/mo</span></p>
+            <p className="text-xl font-black font-syne">$0.00<span className="text-[10px] text-muted-foreground">/mo</span></p>
           </div>
           <Button className="w-full mt-6 rounded-2xl bg-foreground text-background font-black uppercase text-xs h-12 shadow-lg shadow-foreground/10 hover:bg-foreground/90 transition-all">
             Manage Subscription
           </Button>
         </section>
 
-        {/* Account Settings List */}
         <section className="bg-card border border-border rounded-[32px] overflow-hidden p-2">
           {[
             { label: "Edit Profile", icon: <Edit2 size={16} />, color: "text-primary" },
@@ -264,9 +249,9 @@ const ProfilePage = () => {
           ))}
         </section>
 
-        {/* Sign Out */}
         <Button
           variant="outline"
+          onClick={handleSignOut}
           className="w-full h-14 rounded-[24px] border-rose-500/30 text-rose-500 hover:bg-rose-500/10 font-black font-syne uppercase text-sm mb-12"
         >
           <LogOut size={18} className="mr-2" />
