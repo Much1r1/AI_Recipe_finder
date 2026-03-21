@@ -5,27 +5,73 @@ import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, ArrowRight } from "lucide-react";
 import AmbientBackground from "@/components/AmbientBackground";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleAuth = (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
 
-    // Extract name from email: e.g. "muchirielvis375@gmail.com" -> "Muchiri"
-    const namePart = email.split("@")[0];
-    const name = namePart.charAt(0).toUpperCase() + namePart.slice(1).replace(/[0-9]/g, "");
+    try {
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) throw error;
+        navigate("/dashboard");
+      } else {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+            },
+          },
+        });
+        if (error) throw error;
 
-    localStorage.setItem("user", JSON.stringify({
-      email,
-      name: name || "User",
-      isLoggedIn: true
-    }));
+        if (data.user) {
+          // Create profile record
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .upsert({
+              id: data.user.id,
+              email: email,
+              full_name: fullName,
+              updated_at: new Date().toISOString(),
+            });
 
-    navigate("/dashboard");
+          if (profileError) {
+             console.error("Error creating profile:", profileError);
+          }
+        }
+
+        toast({
+          title: "Account created",
+          description: "Check your email for the confirmation link.",
+        });
+        setIsLogin(true);
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: error.message,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -55,6 +101,9 @@ const Auth = () => {
               <Input
                 type="text"
                 placeholder="Full Name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
                 className="h-14 pl-12 rounded-2xl bg-white/5 border-white/10 text-white"
               />
             </div>
@@ -86,10 +135,11 @@ const Auth = () => {
 
           <Button
             type="submit"
+            disabled={isLoading}
             className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg"
           >
-            {isLogin ? "Sign In" : "Get Started"}
-            <ArrowRight className="w-5 h-5 ml-2" />
+            {isLoading ? "Please wait..." : isLogin ? "Sign In" : "Get Started"}
+            {!isLoading && <ArrowRight className="w-5 h-5 ml-2" />}
           </Button>
         </form>
 
