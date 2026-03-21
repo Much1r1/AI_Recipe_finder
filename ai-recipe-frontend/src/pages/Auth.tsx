@@ -55,6 +55,23 @@ const Auth = () => {
           if (profileError) {
              console.error("Error creating profile:", profileError);
           }
+
+          // Create default goals
+          const { error: goalsError } = await supabase
+            .from("goals")
+            .upsert({
+              user_id: data.user.id,
+              calories: 2200,
+              protein: 150,
+              carbs: 250,
+              fats: 70,
+              water: 2000,
+              updated_at: new Date().toISOString()
+            });
+
+          if (goalsError) {
+            console.error("Error creating default goals:", goalsError);
+          }
         }
 
         toast({
